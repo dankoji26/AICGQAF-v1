@@ -1,0 +1,443 @@
+# ============================================================
+# AICGQAF v1.0 — System Configuration File
+# aicgqaf-config.yml
+# ============================================================
+# Koji Dan Seya | TP090490 | CT095-6-M
+# Asia Pacific University of Technology & Innovation
+#
+# This file is the single source of truth for all AICGQAF
+# operational parameters. Store this file in the root of the
+# target repository. All thresholds, roles, SLAs, and
+# notification settings are configurable here without any
+# code changes.
+#
+# Sensitive values (tokens, keys) must be stored in GitHub
+# Secrets or AWS Secrets Manager — never hardcoded here.
+# ============================================================
+
+# ──────────────────────────────────────────────────────────
+# FRAMEWORK METADATA
+# ──────────────────────────────────────────────────────────
+framework:
+  version: "1.0"
+  name: "AICGQAF"
+  description: "AI Code Generation Quality Assurance Framework"
+  author: "Koji Dan Seya — TP090490 — CT095-6-M"
+  institution: "Asia Pacific University of Technology & Innovation"
+
+  # Rollout mode controls how the framework interacts with developers.
+  # shadow     → runs silently, logs only, never blocks (Months 1–2)
+  # advisory   → posts findings as PR comments, does not block (Months 3–4)
+  # enforcement→ all quality gates are fully blocking (Month 5+)
+  rollout_mode: "shadow"
+
+  # Supported languages for static analysis
+  supported_languages:
+    - python
+    - javascript
+    - java
+    - csharp
+
+  # Enable or disable individual layers globally
+  layers_enabled:
+    layer1: true
+    layer2: true
+    layer3: true
+
+
+# ──────────────────────────────────────────────────────────
+# LAYER 1 — AUTOMATED STATIC ANALYSIS
+# ──────────────────────────────────────────────────────────
+layer1:
+
+  # ── SonarQube Configuration ──────────────────────────
+  sonarqube:
+    enabled: true
+    host_url_secret: "SONAR_HOST_URL"       # GitHub Secret name
+    token_secret: "SONAR_TOKEN"             # GitHub Secret name
+    project_key_prefix: "aicgqaf-"         # Prefixed to repo name
+    quality_gate: "Sonar way"               # Built-in SonarQube gate
+    wait_for_quality_gate: true
+    timeout_seconds: 300
+    exclusions:
+      - "**/node_modules/**"
+      - "**/__pycache__/**"
+      - "**/venv/**"
+      - "**/.venv/**"
+      - "**/dist/**"
+      - "**/build/**"
+      - "**/*.min.js"
+      - "**/migrations/**"
+
+  # ── CodeQL Configuration ─────────────────────────────
+  codeql:
+    enabled: true
+    query_suite: "security-extended"        # Covers CWE Top 25 + OWASP Top 10
+    languages:
+      - python
+      - javascript
+      - java
+      - csharp
+    additional_queries:
+      - "security-and-quality"
+    timeout_seconds: 600
+    sarif_upload: false                     # AICGQAF handles SARIF internally
+
+  # ── Bandit Configuration (Python only) ───────────────
+  bandit:
+    enabled: true
+    confidence_level: "medium"              # low | medium | high
+    severity_level: "medium"               # low | medium | high
+    excluded_paths:
+      - "tests/"
+      - "test_*.py"
+      - "*_test.py"
+      - "conftest.py"
+      - "setup.py"
+
+  # ── Quality Gate 1 Thresholds ────────────────────────
+  # Source: Section 2.3 of Framework Architecture document
+  # Empirical basis: Sabra et al. (2025), Schreiber & Tippe (2025)
+  thresholds:
+
+    # AUTO-REJECT conditions (FAIL) — pipeline halted immediately
+    fail:
+      critical_vulnerabilities_max: 0      # Zero tolerance for critical CVEs
+      high_vulnerabilities_max: 0          # Zero tolerance for high CVEs
+      code_smell_percent_max: 30.0         # > 30% = FAIL
+      maintainability_index_min: 50        # < 50 = FAIL (SonarQube rating D/E)
+      technical_debt_hours_max: 5.0        # > 5 hours = FAIL
+      cyclomatic_complexity_avg_max: 15.0  # > 15 average = FAIL
+
+    # ESCALATE conditions — passed to Layer 2 for AI review
+    escalate:
+      medium_vulnerabilities_min: 1        # Any MEDIUM → escalate
+      code_smell_percent_min: 10.0         # ≥ 10% → escalate
+      maintainability_index_max: 70        # ≤ 70 → escalate
+      technical_debt_hours_min: 2.0        # ≥ 2 hours → escalate
+      cyclomatic_complexity_avg_min: 10.0  # > 10 average → escalate
+
+    # Auto-reject CWE IDs regardless of severity classification
+    # Source: OWASP Top 10 2021 + Veracode (2025) findings
+    auto_reject_cwe_ids:
+      - "CWE-79"    # Cross-Site Scripting
+      - "CWE-89"    # SQL Injection
+      - "CWE-78"    # OS Command Injection
+      - "CWE-798"   # Hard-coded Credentials
+      - "CWE-22"    # Path Traversal
+      - "CWE-94"    # Code Injection
+      - "CWE-611"   # XML External Entity (XXE)
+      - "CWE-918"   # Server-Side Request Forgery (SSRF)
+
+    # CWEs that trigger escalation (require AI or human review)
+    escalate_cwe_ids:
+      - "CWE-200"   # Information Exposure
+      - "CWE-306"   # Missing Authentication
+      - "CWE-352"   # Cross-Site Request Forgery
+      - "CWE-434"   # Unrestricted File Upload
+      - "CWE-502"   # Deserialization of Untrusted Data
+      - "CWE-20"    # Improper Input Validation
+
+
+# ──────────────────────────────────────────────────────────
+# LAYER 2 — AI-ASSISTED SEMANTIC REVIEW
+# ──────────────────────────────────────────────────────────
+layer2:
+
+  # ── Model Configuration ──────────────────────────────
+  # Source: Section 3.1 of Framework Architecture document
+  model:
+    provider: "anthropic"
+    model_id: "claude-sonnet-4-20250514"
+    api_key_secret: "ANTHROPIC_API_KEY"     # GitHub Secret name
+    temperature: 0.3                        # Deterministic, safety-focused
+    top_p: 0.9
+    max_tokens: 8000
+    timeout_seconds: 35
+    max_retries: 3
+    retry_delay_seconds: 5
+
+  # ── Cost Controls ────────────────────────────────────
+  cost:
+    max_cost_per_review_usd: 0.05           # Hard limit per review
+    monthly_budget_usd: 15.00              # Alarm threshold (10-dev team)
+    cache_identical_reviews_hours: 24       # Avoid duplicate API calls
+    cache_table: "aicgqaf-l2-cache"        # DynamoDB cache table
+
+  # ── Context Package Settings ─────────────────────────
+  # Source: Section 3.2 of Framework Architecture document
+  context:
+    max_diff_chars: 6000                    # Diff truncation for token budget
+    include_repo_structure_depth: 2         # Directory tree depth
+    include_last_n_reviews: 5              # Historical review context
+    include_dependency_cves: false         # Requires Snyk/Dependabot integration
+    security_policy_files:                 # Search order for security policy
+      - "SECURITY.md"
+      - "security.md"
+      - "docs/SECURITY.md"
+      - ".github/SECURITY.md"
+    coding_standards_files:                # Search order for coding standards
+      - "docs/coding-standards.md"
+      - "CONTRIBUTING.md"
+      - ".eslintrc.json"
+      - ".pylintrc"
+      - "pyproject.toml"
+
+  # ── Quality Gate 2 Thresholds ────────────────────────
+  # Source: Section 5.1.2 of Framework Architecture document
+  thresholds:
+
+    # APPROVE: all conditions must be met
+    approve:
+      confidence_min: 70                   # AI confidence ≥ 70%
+      require_semantic_correct: true
+      require_architectural_fit: true
+      maintainability_score_min: 50
+      max_medium_security_concerns: 0      # Zero medium concerns for auto-approve
+
+    # REJECT: any condition triggers rejection
+    reject:
+      confidence_max: 29                   # Confidence < 30 = cannot decide
+      semantic_correct_required: true      # false = immediate REJECT
+      high_critical_concerns_max: 0        # Any HIGH/CRITICAL = REJECT
+      cvss_auto_block_score: 6.0           # CVSS ≥ 6.0 = auto-block
+
+  # ── Evaluation Dimension Weights ─────────────────────
+  # Source: Section 3.4 of Framework Architecture document
+  dimensions:
+    semantic_correctness:
+      weight: null                         # Critical — fail = REJECT regardless of score
+      critical: true
+    architectural_fit:
+      weight: 0.25
+    security_awareness:
+      weight: 0.35                        # Highest weight — security is primary concern
+    maintainability:
+      weight: 0.20
+    performance:
+      weight: 0.20
+
+
+# ──────────────────────────────────────────────────────────
+# LAYER 3 — HUMAN-IN-THE-LOOP OVERSIGHT
+# ──────────────────────────────────────────────────────────
+layer3:
+
+  # ── Reviewer Roles ───────────────────────────────────
+  # Source: Section 4.1 of Framework Architecture document
+  reviewers:
+
+    security_expert:
+      display_name: "Security Expert"
+      triggers:
+        - "HIGH_SECURITY_CONCERN"
+        - "CRITICAL_SECURITY_CONCERN"
+        - "CWE_IN_AUTO_REJECT_LIST"
+        - "CVSS_ABOVE_THRESHOLD"
+      review_focus:
+        - "OWASP Top 10 alignment"
+        - "CWE remediation verification"
+        - "Secure design pattern compliance"
+        - "Data exposure risk assessment"
+      sla_minutes: 15
+      escalation_contact: "chief_security_officer"
+      escalation_trigger: "CRITICAL severity finding"
+
+    architect:
+      display_name: "Architecture Reviewer"
+      triggers:
+        - "ARCHITECTURAL_FIT_FAILURE"
+        - "MAJOR_STRUCTURAL_CHANGE"     # > 20% of codebase modified
+        - "NEW_EXTERNAL_DEPENDENCY"
+      review_focus:
+        - "Design pattern adherence"
+        - "System cohesion and coupling"
+        - "Dependency management"
+        - "Scalability impact"
+      sla_minutes: 20
+      escalation_contact: "chief_architect"
+      escalation_trigger: "Full redesign required"
+
+    senior_developer:
+      display_name: "Senior Developer"
+      triggers:
+        - "DEFAULT"                     # All other escalations
+        - "LOW_AI_CONFIDENCE"
+        - "MEDIUM_SECURITY_CONCERN"
+        - "LOW_MAINTAINABILITY"
+      review_focus:
+        - "Overall code quality"
+        - "Business logic correctness"
+        - "Team coding standards adherence"
+        - "Test coverage adequacy"
+      sla_minutes: 10
+      escalation_contact: "tech_lead"
+      escalation_trigger: "Conflict with team standards"
+
+  # ── SLA Enforcement ──────────────────────────────────
+  sla:
+    reminder_at_percent: 80             # Send reminder when 80% of SLA elapsed
+    breach_action: "escalate_to_manager"  # Action on SLA breach
+    fallback_policy: "block"            # block | advisory
+    # block:    PR cannot merge until human decision is made
+    # advisory: PR can merge but is flagged in the dashboard
+
+  # ── Dashboard Configuration ──────────────────────────
+  dashboard:
+    base_url_secret: "DASHBOARD_URL"    # Set in GitHub Secrets
+    require_checklist_completion: true  # Checklist must be ticked before decision
+    min_comment_length: 20              # Characters — enforce meaningful comments
+    require_override_justification: true # Mandatory if human contradicts Layer 2
+
+  # ── Queue Configuration ───────────────────────────────
+  queue:
+    type: "sqs_fifo"
+    url_secret: "SQS_QUEUE_URL"
+    message_group_by: "reviewer_role"   # FIFO grouping for priority ordering
+    visibility_timeout_seconds: 1800    # 30 minutes — longer than max SLA
+
+
+# ──────────────────────────────────────────────────────────
+# AWS INFRASTRUCTURE
+# ──────────────────────────────────────────────────────────
+aws:
+  region_secret: "AWS_REGION"
+  access_key_secret: "AWS_ACCESS_KEY_ID"
+  secret_key_secret: "AWS_SECRET_ACCESS_KEY"
+
+  s3:
+    bucket_secret: "S3_BUCKET"
+    artifact_prefix: "reviews/"
+    retention_days: 90
+    versioning: true
+
+  dynamodb:
+    reviews_table_secret: "DYNAMODB_TABLE"
+    cache_table: "aicgqaf-l2-cache"
+    billing_mode: "PAY_PER_REQUEST"     # On-demand scaling
+
+  cloudwatch:
+    log_group: "/aicgqaf/pipeline"
+    metrics_namespace: "AICGQAF/Quality"
+    alarms:
+      - name: "HighFalsePositiveRate"
+        metric: "FalsePositiveRate"
+        threshold: 0.05                 # Alert if > 5% false positives
+        evaluation_periods: 3
+      - name: "L2CostBudgetAlert"
+        metric: "Layer2MonthlyCost"
+        threshold: 12.00                # Alert at 80% of $15 monthly budget
+        evaluation_periods: 1
+      - name: "SLABreachRate"
+        metric: "SLABreachCount"
+        threshold: 3                    # Alert if > 3 SLA breaches in a day
+        evaluation_periods: 1
+      - name: "PipelineErrorRate"
+        metric: "PipelineErrors"
+        threshold: 5
+        evaluation_periods: 2
+
+  sns:
+    topic_arn_secret: "SNS_TOPIC_ARN"
+    notification_events:
+      - "REJECTED_L1"
+      - "REJECTED_L2"
+      - "ESCALATED_TO_HUMAN"
+      - "SLA_BREACH"
+      - "APPROVED"
+      - "COST_ALERT"
+
+
+# ──────────────────────────────────────────────────────────
+# NOTIFICATIONS
+# ──────────────────────────────────────────────────────────
+notifications:
+
+  slack:
+    enabled: false                        # Enable when Slack webhook is configured
+    webhook_secret: "SLACK_WEBHOOK_URL"
+    channel: "#code-quality"
+    notify_on:
+      - "ESCALATED_TO_HUMAN"
+      - "REJECTED_L1"
+      - "REJECTED_L2"
+      - "SLA_BREACH"
+      - "HUMAN_REJECTED"
+    mention_reviewer_on_escalation: true
+
+  email:
+    enabled: false                        # Enable when SES is configured
+    sender: "aicgqaf@yourdomain.com"
+    recipients:
+      - "dev-team@yourdomain.com"
+    notify_on:
+      - "REJECTED_L1"
+      - "APPROVED"
+    include_report_attachment: false
+
+  github:
+    post_pr_comments: true               # Post findings as PR comments
+    create_check_runs: true              # Create GitHub check runs per layer
+    request_changes_on_reject: true      # Use GitHub review REQUEST_CHANGES
+
+
+# ──────────────────────────────────────────────────────────
+# REPORTING AND METRICS
+# ──────────────────────────────────────────────────────────
+reporting:
+  metrics_retention_days: 90
+  export_formats:
+    - json
+    - csv
+  kpi_targets:
+    # Source: Section 8 of Framework Architecture document
+    defect_detection_rate_min: 0.90       # ≥ 90%
+    security_coverage_target: 1.00       # 100% OWASP Top 10
+    false_positive_rate_max: 0.05        # < 5%
+    automation_rate_target: 0.70         # ≥ 70% resolved without human
+    avg_review_latency_minutes_max: 5    # < 5 minutes (Paths 1–3)
+    monthly_cost_max_usd: 200.00         # < $200/month for 10-dev team
+    developer_satisfaction_min: 7.0      # > 7/10 after 6 months
+
+
+# ──────────────────────────────────────────────────────────
+# COMPLIANCE
+# ──────────────────────────────────────────────────────────
+compliance:
+  standards:
+    - name: "OWASP Top 10"
+      version: "2021"
+      required: true
+    - name: "CWE Top 25"
+      version: "2024"
+      required: true
+    - name: "NIST Cybersecurity Framework"
+      version: "2.0"
+      required: false
+  audit:
+    enabled: true
+    retention_years: 3
+    include_human_decisions: true
+    include_override_events: true
+
+
+# ──────────────────────────────────────────────────────────
+# EXPLICIT SCOPE BOUNDARIES
+# Source: Section 6 of Research Proposal (Assignment 2)
+# ──────────────────────────────────────────────────────────
+# The following are OUT OF SCOPE for AICGQAF v1.0:
+#
+# 1. Non-code artifacts (docs, test cases, IaC)
+# 2. Runtime behaviour (memory leaks, performance under load)
+# 3. Business logic validation (functional correctness)
+# 4. LLM model selection guidance
+# 5. Automatic code refactoring or fixing
+# 6. License compliance checking
+# 7. Performance optimisation
+# 8. Enforcement of company-specific cultural coding styles
+#
+# Technology constraints:
+# - Requires GitHub or GitLab (no SVN/Mercurial)
+# - Supports Python, JavaScript, Java, C# only
+# - Requires AWS infrastructure (no on-premise-only support)
+# ──────────────────────────────────────────────────────────

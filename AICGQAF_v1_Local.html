@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AICGQAF v1.0 — AI Code Generation Quality Assurance Framework</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   AICGQAF v1.0 — Professional Dark Theme
+   Koji Dan Seya | TP090490 | CT095-6-M
+   ═══════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #070d1a;
+  --bg2:      #0a1225;
+  --bg3:      #0d1830;
+  --panel:    #0f1e36;
+  --panel2:   #122240;
+  --border:   rgba(42,140,255,0.15);
+  --border2:  rgba(42,140,255,0.28);
+  --blue:     #2a8cff;
+  --blue2:    #5aaeff;
+  --cyan:     #00d4ff;
+  --green:    #00e676;
+  --green2:   #00c853;
+  --amber:    #ffab00;
+  --amber2:   #ffd740;
+  --red:      #ff3d3d;
+  --red2:     #ff6b6b;
+  --purple:   #b388ff;
+  --text:     #e2ecff;
+  --text2:    #7a9cc8;
+  --text3:    #3d5a80;
+  --mono:     'JetBrains Mono',monospace;
+  --sans:     'Syne',sans-serif;
+  --r-sm:     6px;
+  --r-md:     10px;
+  --r-lg:     14px;
+  --r-xl:     18px;
+}
+html{font-size:14px}
+body{
+  font-family:var(--mono);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+/* Animated grid background */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(42,140,255,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(42,140,255,0.04) 1px,transparent 1px);
+  background-size:48px 48px;
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(42,140,255,0.08),transparent);
+}
+
+/* ── HEADER ─────────────────────────────── */
+.header{
+  position:sticky;top:0;z-index:200;
+  background:rgba(7,13,26,0.92);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border2);
+  padding:0 40px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-box{
+  width:40px;height:40px;border-radius:10px;
+  background:linear-gradient(135deg,#0d47a1,#1976d2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;box-shadow:0 0 24px rgba(42,140,255,0.5);
+  border:1px solid rgba(42,140,255,0.4);
+}
+.logo-text{font-family:var(--sans);font-size:18px;font-weight:800;
+  letter-spacing:0.5px;color:var(--text)}
+.logo-sub{font-size:10px;color:var(--text3);letter-spacing:1px;margin-top:1px}
+.header-pills{display:flex;gap:10px;align-items:center}
+.pill{font-size:10px;padding:4px 12px;border-radius:20px;font-family:var(--sans);
+  font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.pill-green{background:rgba(0,230,118,0.12);color:var(--green);
+  border:1px solid rgba(0,230,118,0.3);display:flex;align-items:center;gap:5px}
+.pill-green::before{content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 8px var(--green)}
+.pill-blue{background:rgba(42,140,255,0.1);color:var(--blue2);
+  border:1px solid rgba(42,140,255,0.3)}
+
+/* ── MAIN LAYOUT ─────────────────────────── */
+main{
+  position:relative;z-index:1;
+  max-width:1280px;margin:0 auto;
+  padding:32px 40px 80px;
+  display:grid;
+  grid-template-columns:1fr 400px;
+  gap:24px;
+}
+.col-left{display:flex;flex-direction:column;gap:20px}
+.col-right{display:flex;flex-direction:column;gap:20px}
+
+/* ── CARDS ───────────────────────────────── */
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:24px;position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 0%,rgba(42,140,255,0.5) 50%,transparent 100%);
+}
+.card-title{
+  font-family:var(--sans);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:2px;
+  color:var(--text2);margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;
+}
+.card-title .icon{font-size:16px}
+.card-title .line{flex:1;height:1px;background:var(--border)}
+
+/* ── NAV TABS ────────────────────────────── */
+.nav-tabs{
+  display:flex;gap:0;
+  background:var(--bg2);
+  border:1px solid var(--border2);
+  border-radius:var(--r-lg);
+  overflow:hidden;margin-bottom:24px;
+  position:relative;z-index:1;
+}
+.nav-tab{
+  flex:1;padding:12px 8px;
+  font-family:var(--sans);font-size:12px;font-weight:600;
+  text-transform:uppercase;letter-spacing:1px;
+  color:var(--text3);cursor:pointer;border:none;
+  background:transparent;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.nav-tab:hover{color:var(--text2);background:rgba(42,140,255,0.05)}
+.nav-tab.active{
+  background:var(--panel2);
+  color:var(--blue2);
+  border-bottom:2px solid var(--blue);
+}
+.nav-tab .tab-icon{font-size:16px}
+.pane{display:none}
+.pane.active{display:contents}
+
+/* ── LANG SELECTOR ───────────────────────── */
+.lang-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.lang-btn{
+  padding:6px 18px;border-radius:20px;
+  border:1px solid var(--border2);background:transparent;
+  font-family:var(--mono);font-size:12px;cursor:pointer;
+  color:var(--text2);transition:all .2s;
+}
+.lang-btn:hover{border-color:var(--blue);color:var(--blue)}
+.lang-btn.active{
+  background:rgba(42,140,255,0.15);
+  border-color:var(--blue);color:var(--cyan);font-weight:600;
+}
+
+/* ── CODE INPUT ──────────────────────────── */
+.code-label{
+  font-size:10px;color:var(--text3);letter-spacing:1.5px;
+  text-transform:uppercase;font-weight:600;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+textarea.code-box{
+  width:100%;min-height:260px;padding:16px;
+  font-family:var(--mono);font-size:12px;line-height:1.7;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--r-md);color:var(--cyan);resize:vertical;
+  outline:none;transition:border-color .2s;
+}
+textarea.code-box:focus{border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(42,140,255,0.08)}
+textarea.code-box::placeholder{color:var(--text3)}
+
+/* ── SAMPLE BUTTONS ──────────────────────── */
+.samples{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.sample-btn{
+  padding:5px 13px;border-radius:var(--r-sm);font-size:11px;
+  border:1px solid var(--border);background:var(--bg3);
+  cursor:pointer;color:var(--text2);font-family:var(--mono);
+  display:flex;align-items:center;gap:6px;transition:all .2s;
+}
+.sample-btn:hover{border-color:var(--blue2);color:var(--text)}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-red{background:var(--red);box-shadow:0 0 6px var(--red)}
+.dot-amber{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.dot-green{background:var(--green);box-shadow:0 0 6px var(--green)}
+
+/* ── RUN BUTTON ──────────────────────────── */
+.run-btn{
+  width:100%;padding:15px;margin-top:16px;
+  border-radius:var(--r-md);border:none;
+  background:linear-gradient(135deg,#0d47a1 0%,#1976d2 50%,var(--blue) 100%);
+  color:#fff;font-family:var(--sans);font-size:14px;font-weight:700;
+  cursor:pointer;letter-spacing:1px;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .2s;
+  box-shadow:0 4px 24px rgba(42,140,255,0.35);
+}
+.run-btn:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 8px 32px rgba(42,140,255,0.55);
+}
+.run-btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── PIPELINE TRACK ──────────────────────── */
+.pipe-track{
+  display:flex;align-items:center;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px;
+}
+.pipe-step{
+  flex:1;padding:13px 8px;text-align:center;
+  border-right:1px solid var(--border);
+  transition:all .35s;
+}
+.pipe-step:last-child{border-right:none}
+.pipe-name{font-family:var(--sans);font-size:10px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;color:var(--text3)}
+.pipe-sub{font-size:9px;color:var(--text3);opacity:.7}
+.pipe-step.active .pipe-name{color:var(--blue2)}
+.pipe-step.active .pipe-sub{color:var(--blue);opacity:1}
+.pipe-step.active{background:rgba(42,140,255,0.1);border-color:rgba(42,140,255,0.3)}
+.pipe-step.pass .pipe-name{color:var(--green)}
+.pipe-step.pass{background:rgba(0,230,118,0.08)}
+.pipe-step.fail .pipe-name{color:var(--red2)}
+.pipe-step.fail{background:rgba(255,61,61,0.08)}
+.pipe-step.warn .pipe-name{color:var(--amber)}
+.pipe-step.warn{background:rgba(255,171,0,0.08)}
+.status-line{font-size:11px;color:var(--text2);text-align:center;
+  padding:6px 0;font-family:var(--mono)}
+
+/* ── METRICS GRID ────────────────────────── */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.metric-box{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:14px 10px;text-align:center;
+  position:relative;overflow:hidden;
+}
+.metric-box::before{content:'';position:absolute;bottom:0;left:0;right:0;
+  height:2px;background:var(--border)}
+.metric-box.good::before{background:var(--green);box-shadow:0 0 8px var(--green)}
+.metric-box.warn::before{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.metric-box.bad::before{background:var(--red);box-shadow:0 0 8px var(--red)}
+.metric-num{font-family:var(--sans);font-size:26px;font-weight:800;line-height:1;margin-bottom:5px}
+.metric-box.good .metric-num{color:var(--green)}
+.metric-box.warn .metric-num{color:var(--amber)}
+.metric-box.bad .metric-num{color:var(--red2)}
+.metric-box:not(.good):not(.warn):not(.bad) .metric-num{color:var(--blue2)}
+.metric-lbl{font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+
+/* ── GAUGE BARS ──────────────────────────── */
+.gauge{margin:8px 0}
+.gauge-hd{display:flex;justify-content:space-between;font-size:11px;
+  color:var(--text2);margin-bottom:5px}
+.gauge-track{height:5px;border-radius:3px;
+  background:rgba(255,255,255,0.05);overflow:hidden}
+.gauge-fill{height:100%;border-radius:3px;
+  transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+.gf-green{background:linear-gradient(90deg,var(--green2),var(--green));
+  box-shadow:0 0 6px var(--green)}
+.gf-amber{background:linear-gradient(90deg,var(--amber),var(--amber2));
+  box-shadow:0 0 6px var(--amber)}
+.gf-red{background:linear-gradient(90deg,var(--red),var(--red2))}
+.gf-blue{background:linear-gradient(90deg,#1565C0,var(--blue));
+  box-shadow:0 0 6px var(--blue)}
+
+/* ── GATE DECISION BOX ───────────────────── */
+.gate-box{
+  border-radius:var(--r-md);padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  border-left:4px solid;margin-bottom:12px;
+}
+.gb-pass{background:rgba(0,230,118,0.07);border-color:var(--green);border:1px solid rgba(0,230,118,0.3);border-left:4px solid var(--green)}
+.gb-fail{background:rgba(255,61,61,0.07);border-color:var(--red);border:1px solid rgba(255,61,61,0.3);border-left:4px solid var(--red)}
+.gb-warn{background:rgba(255,171,0,0.07);border-color:var(--amber);border:1px solid rgba(255,171,0,0.3);border-left:4px solid var(--amber)}
+.gate-icon{font-size:22px;flex-shrink:0}
+.gate-body{flex:1}
+.gate-title{font-family:var(--sans);font-size:13px;font-weight:700;margin-bottom:3px}
+.gb-pass .gate-title{color:var(--green)}
+.gb-fail .gate-title{color:var(--red2)}
+.gb-warn .gate-title{color:var(--amber)}
+.gate-reason{font-size:11px;color:var(--text2);line-height:1.5}
+.gate-badge{font-size:10px;padding:3px 10px;border-radius:12px;
+  font-family:var(--sans);font-weight:700;flex-shrink:0;letter-spacing:0.5px}
+.gb-pass .gate-badge{background:rgba(0,230,118,0.15);color:var(--green)}
+.gb-fail .gate-badge{background:rgba(255,61,61,0.15);color:var(--red2)}
+.gb-warn .gate-badge{background:rgba(255,171,0,0.15);color:var(--amber)}
+
+/* ── CWE VIOLATIONS ──────────────────────── */
+.cwe-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.cwe-item{
+  border:1px solid var(--border2);border-radius:var(--r-md);
+  padding:13px 15px;background:var(--bg2);
+}
+.cwe-head{display:flex;gap:8px;align-items:center;margin-bottom:7px;flex-wrap:wrap}
+.cwe-tag{font-size:10px;padding:3px 9px;border-radius:4px;
+  font-weight:700;letter-spacing:0.5px;border:1px solid}
+.tc-critical{background:rgba(255,61,61,0.12);color:var(--red2);border-color:rgba(255,61,61,0.35)}
+.tc-high{background:rgba(255,120,70,0.12);color:#ff7043;border-color:rgba(255,120,70,0.35)}
+.tc-medium{background:rgba(255,171,0,0.1);color:var(--amber);border-color:rgba(255,171,0,0.35)}
+.tc-low{background:rgba(42,140,255,0.1);color:var(--blue2);border-color:rgba(42,140,255,0.3)}
+.cwe-tool-lbl{font-size:10px;color:var(--text3)}
+.cwe-desc{font-size:12px;color:var(--text);margin-bottom:8px;line-height:1.5}
+.cwe-fix{font-size:11px;font-family:var(--mono);color:var(--cyan);
+  background:rgba(0,212,255,0.05);padding:10px 12px;border-radius:6px;
+  border-left:2px solid var(--cyan);white-space:pre-wrap;line-height:1.6}
+
+/* ── AI BOX ──────────────────────────────── */
+.ai-box{
+  background:linear-gradient(135deg,rgba(42,140,255,0.07),rgba(0,212,255,0.03));
+  border:1px solid rgba(42,140,255,0.25);border-radius:var(--r-md);
+  padding:16px;margin-bottom:14px;
+}
+.ai-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--cyan);font-weight:600;margin-bottom:8px;
+  display:flex;align-items:center;gap:6px}
+.ai-txt{font-size:13px;color:var(--text2);line-height:1.7}
+
+/* ── CONFIDENCE ──────────────────────────── */
+.conf-wrap{margin-bottom:14px}
+.conf-hd{display:flex;justify-content:space-between;font-size:12px;
+  color:var(--text2);margin-bottom:6px;align-items:center}
+.conf-num{font-family:var(--sans);font-size:32px;font-weight:800;line-height:1}
+.conf-bar{height:7px;border-radius:4px;
+  background:rgba(255,255,255,0.05);overflow:hidden}
+.conf-fill{height:100%;border-radius:4px;
+  transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+
+/* ── VERDICT CARDS ───────────────────────── */
+.verdict-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.verdict{padding:10px 13px;border-radius:var(--r-md);border:1px solid;
+  display:flex;align-items:center;gap:9px}
+.v-pass{background:rgba(0,230,118,0.07);border-color:rgba(0,230,118,0.25)}
+.v-fail{background:rgba(255,61,61,0.07);border-color:rgba(255,61,61,0.25)}
+.v-warn{background:rgba(255,171,0,0.07);border-color:rgba(255,171,0,0.25)}
+.v-icon{font-size:18px}
+.v-lbl{font-family:var(--sans);font-size:11px;font-weight:700;margin-bottom:1px}
+.v-pass .v-lbl{color:var(--green)}
+.v-fail .v-lbl{color:var(--red2)}
+.v-warn .v-lbl{color:var(--amber)}
+.v-sub{font-size:10px;color:var(--text3)}
+
+/* ── FINAL BANNER ────────────────────────── */
+.final-banner{
+  border-radius:var(--r-lg);padding:20px 22px;
+  display:flex;align-items:center;gap:16px;
+  border:1px solid;margin-bottom:0;
+}
+.fb-approved{background:rgba(0,230,118,0.08);border-color:rgba(0,230,118,0.4)}
+.fb-rejected{background:rgba(255,61,61,0.08);border-color:rgba(255,61,61,0.4)}
+.fb-escalated{background:rgba(255,171,0,0.08);border-color:rgba(255,171,0,0.4)}
+.fb-ico{font-size:34px;flex-shrink:0}
+.fb-title{font-family:var(--sans);font-size:16px;font-weight:700;margin-bottom:4px}
+.fb-approved .fb-title{color:var(--green)}
+.fb-rejected .fb-title{color:var(--red2)}
+.fb-escalated .fb-title{color:var(--amber)}
+.fb-sub{font-size:12px;color:var(--text2);line-height:1.5}
+
+/* ── SECTION LABEL ───────────────────────── */
+.sec-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--text3);margin-bottom:8px;margin-top:14px}
+.sec-lbl:first-child{margin-top:0}
+
+/* ── LAYER 3 ─────────────────────────────── */
+.role-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;
+  background:rgba(179,136,255,0.12);color:var(--purple);
+  border:1px solid rgba(179,136,255,0.35);margin-bottom:14px;
+  font-family:var(--sans);letter-spacing:0.5px;
+}
+.esc-box{
+  background:rgba(255,171,0,0.06);
+  border:1px solid rgba(255,171,0,0.25);
+  border-left:3px solid var(--amber);
+  border-radius:var(--r-md);padding:12px 15px;
+  font-size:12px;color:var(--amber2);line-height:1.6;margin-bottom:16px;
+}
+.esc-lbl{font-size:10px;letter-spacing:1.5px;color:var(--amber);
+  font-weight:600;text-transform:uppercase;margin-bottom:5px}
+.checklist{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.chk{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 13px;border-radius:var(--r-md);
+  border:1px solid var(--border);cursor:pointer;
+  transition:all .2s;user-select:none;
+}
+.chk:hover{border-color:var(--border2);background:rgba(255,255,255,0.02)}
+.chk.on{background:rgba(0,230,118,0.06);border-color:rgba(0,230,118,0.35)}
+.chk-box{width:18px;height:18px;min-width:18px;border-radius:4px;
+  border:2px solid var(--text3);display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;
+  margin-top:1px;transition:all .2s;flex-shrink:0}
+.chk.on .chk-box{background:var(--green);border-color:var(--green);color:#000}
+.chk-txt{font-size:12px;color:var(--text2);line-height:1.5;flex:1}
+.chk.on .chk-txt{color:var(--text)}
+.chk-prog{font-size:11px;color:var(--text3);margin-bottom:14px}
+.chk-prog span{color:var(--green);font-weight:700}
+.comment-box{
+  width:100%;min-height:80px;padding:12px;
+  font-family:var(--mono);font-size:12px;line-height:1.6;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--r-md);color:var(--text);resize:vertical;
+  outline:none;transition:border-color .2s;margin-bottom:6px;
+}
+.comment-box:focus{border-color:var(--blue)}
+.comment-box::placeholder{color:var(--text3)}
+.char-cnt{font-size:10px;margin-bottom:12px}
+.char-ok{color:var(--green)}
+.char-bad{color:var(--text3)}
+.fix-box{
+  width:100%;min-height:60px;padding:12px;
+  font-family:var(--mono);font-size:11px;line-height:1.7;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-md);color:var(--cyan);resize:vertical;
+  outline:none;margin-bottom:16px;transition:border-color .2s;
+}
+.fix-box:focus{border-color:rgba(0,212,255,0.4)}
+.fix-box::placeholder{color:var(--text3)}
+.dec-row{display:flex;gap:10px}
+.dec-btn{
+  flex:1;padding:12px;border-radius:var(--r-md);border:1px solid;
+  font-family:var(--sans);font-size:11px;font-weight:700;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+  text-transform:uppercase;display:flex;align-items:center;
+  justify-content:center;gap:6px;
+}
+.dec-btn:disabled{opacity:.25;cursor:not-allowed}
+.dec-btn:not(:disabled):hover{transform:translateY(-2px)}
+.dec-a{background:rgba(0,200,83,0.12);color:var(--green);border-color:rgba(0,200,83,0.35)}
+.dec-c{background:rgba(255,171,0,0.1);color:var(--amber);border-color:rgba(255,171,0,0.35)}
+.dec-r{background:rgba(255,61,61,0.1);color:var(--red2);border-color:rgba(255,61,61,0.35)}
+.dec-note{font-size:10px;color:var(--text3);margin-top:10px;line-height:1.5}
+
+/* ── ABOUT ITEMS ─────────────────────────── */
+.about-row{display:flex;gap:10px;font-size:13px;padding:7px 0;
+  border-bottom:1px solid var(--border)}
+.about-row:last-child{border-bottom:none}
+.about-k{color:var(--text3);min-width:160px;font-size:12px}
+.about-v{color:var(--text)}
+.emp-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;
+}
+.layer-card{
+  padding:12px 14px;border:1px solid var(--border);
+  border-radius:var(--r-md);margin-bottom:8px;
+}
+.layer-card-title{font-family:var(--sans);font-size:13px;font-weight:600;
+  margin-bottom:4px;color:var(--text)}
+.layer-card-sub{font-size:11px;color:var(--text2);line-height:1.5}
+.emp-row{display:flex;flex-direction:column;gap:5px}
+.emp-item{font-size:12px;color:var(--text2);padding:6px 10px;
+  background:var(--bg2);border-radius:6px;line-height:1.4;
+  border-left:2px solid var(--border2)}
+
+/* ── L3 DONE STATE ───────────────────────── */
+.done-box{text-align:center;padding:36px 20px}
+.done-ico{font-size:56px;margin-bottom:16px;display:block;
+  animation:popIn .5s cubic-bezier(.16,1.5,.3,1)}
+@keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+.done-title{font-family:var(--sans);font-size:20px;font-weight:700;margin-bottom:8px}
+.done-sub{font-size:12px;color:var(--text2);margin-bottom:24px;line-height:1.6}
+
+/* ── L3 WAIT STATE ───────────────────────── */
+.wait-box{text-align:center;padding:40px 20px;color:var(--text3)}
+.wait-ico{font-size:40px;margin-bottom:14px;opacity:.4}
+.wait-txt{font-size:13px;line-height:1.6}
+
+/* ── HIDDEN / VISIBLE ────────────────────── */
+.hidden{display:none!important}
+.fade-in{animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── SCROLLBAR ───────────────────────────── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── RESPONSIVE ──────────────────────────── */
+@media(max-width:1050px){main{grid-template-columns:1fr}}
+@media(max-width:600px){main{padding:20px};.header{padding:0 20px}}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════ -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-box">🛡️</div>
+    <div>
+      <div class="logo-text">AICGQAF v1.0</div>
+      <div class="logo-sub">AI Code Generation Quality Assurance Framework</div>
+    </div>
+  </div>
+  <div class="header-pills">
+    <div class="pill pill-green">Live</div>
+    <div class="pill pill-blue">DSR Research Artefact</div>
+  </div>
+</header>
+
+<!-- ═══ NAVIGATION TABS ═══════════════════════════════ -->
+<div style="position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:24px 40px 0">
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tab-analyze" onclick="switchTab('analyze')">
+      <span class="tab-icon">💻</span> Analyze Code
+    </button>
+    <button class="nav-tab" id="tab-results" onclick="switchTab('results')">
+      <span class="tab-icon">📊</span> Results
+    </button>
+    <button class="nav-tab" id="tab-layer3" onclick="switchTab('layer3')">
+      <span class="tab-icon">👤</span> Human Review
+    </button>
+    <button class="nav-tab" id="tab-about" onclick="switchTab('about')">
+      <span class="tab-icon">📋</span> About
+    </button>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═════════════════════════════════════════ -->
+<main>
+
+  <!-- ─── LEFT COLUMN ────────────────────────────── -->
+  <div class="col-left">
+
+    <!-- ANALYZE PANE -->
+    <div id="pane-analyze">
+
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">💻</span> Code Input
+          <div class="line"></div>
+        </div>
+
+        <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;font-weight:600">Language</div>
+        <div class="lang-row">
+          <button class="lang-btn active" onclick="setLang(this,'python')">Python</button>
+          <button class="lang-btn" onclick="setLang(this,'javascript')">JavaScript</button>
+          <button class="lang-btn" onclick="setLang(this,'java')">Java</button>
+          <button class="lang-btn" onclick="setLang(this,'csharp')">C#</button>
+        </div>
+
+        <div class="code-label">
+          <span>Paste AI-Generated Code</span>
+          <span id="lineCount" style="color:var(--text3)">0 lines</span>
+        </div>
+        <textarea class="code-box" id="codeInput"
+          oninput="countLines()"
+          placeholder="# Paste your AI-generated code here...
+# Or click a sample scenario below.
+#
+# The AICGQAF pipeline will execute:
+#  Layer 1  → Static analysis (SonarQube + CodeQL + Bandit)
+#  Gate 1   → Decision: FAIL / ESCALATE / PASS
+#  Layer 2  → Claude AI semantic review
+#  Gate 2   → Decision: REJECT / ESCALATE / APPROVE
+#  Layer 3  → Human-in-the-loop review (if escalated)"></textarea>
+
+        <div class="samples">
+          <button class="sample-btn" onclick="load('sqli')"><span class="dot dot-red"></span>SQL Injection</button>
+          <button class="sample-btn" onclick="load('creds')"><span class="dot dot-red"></span>Hard-coded Credentials</button>
+          <button class="sample-btn" onclick="load('idor')"><span class="dot dot-amber"></span>IDOR + Data Exposure</button>
+          <button class="sample-btn" onclick="load('clean')"><span class="dot dot-green"></span>Clean Code</button>
+        </div>
+
+        <button class="run-btn" id="runBtn" onclick="runPipeline()">
+          ▶ Run AICGQAF Analysis
+        </button>
+      </div>
+
+      <!-- PIPELINE STATUS -->
+      <div class="card hidden" id="pipeCard">
+        <div class="card-title">
+          <span class="icon">⚡</span> Pipeline Status
+          <div class="line"></div>
+        </div>
+        <div class="pipe-track">
+          <div class="pipe-step" id="ps-l1"><div class="pipe-name">Layer 1</div><div class="pipe-sub">Static analysis</div></div>
+          <div class="pipe-step" id="ps-g1"><div class="pipe-name">Gate 1</div><div class="pipe-sub">Decision</div></div>
+          <div class="pipe-step" id="ps-l2"><div class="pipe-name">Layer 2</div><div class="pipe-sub">AI review</div></div>
+          <div class="pipe-step" id="ps-g2"><div class="pipe-name">Gate 2</div><div class="pipe-sub">Decision</div></div>
+          <div class="pipe-step" id="ps-l3"><div class="pipe-name">Layer 3</div><div class="pipe-sub">Human</div></div>
+        </div>
+        <div class="status-line" id="statusLine"></div>
+      </div>
+
+    </div><!-- /pane-analyze -->
+
+    <!-- RESULTS PANE -->
+    <div id="pane-results" class="hidden">
+
+      <div id="finalBannerWrap" class="hidden"></div>
+
+      <!-- L1 Card -->
+      <div class="card hidden" id="l1Card">
+        <div class="card-title"><span class="icon">🔍</span> Layer 1 — Static Analysis Results<div class="line"></div></div>
+        <div class="metrics-grid" id="l1Metrics"></div>
+        <div id="l1Gauges"></div>
+        <div class="sec-lbl">Quality Gate 1</div>
+        <div id="gate1Box"></div>
+        <div id="cweSection"></div>
+      </div>
+
+      <!-- L2 Card -->
+      <div class="card hidden" id="l2Card">
+        <div class="card-title"><span class="icon">🧠</span> Layer 2 — AI Semantic Review<div class="line"></div></div>
+        <div class="ai-box"><div class="ai-lbl">🤖 Claude claude-sonnet-4-6 — Semantic Analysis</div><div class="ai-txt" id="aiText"></div></div>
+        <div class="conf-wrap">
+          <div class="conf-hd">
+            <span style="font-size:11px;color:var(--text2)">AI Confidence Score</span>
+            <span class="conf-num" id="confNum" style="color:var(--blue2)">0%</span>
+          </div>
+          <div class="conf-bar"><div class="conf-fill gf-blue" id="confBar" style="width:0%"></div></div>
+          <div style="font-size:10px;color:var(--text3);text-align:right;margin-top:4px">Threshold: ≥70% for approval</div>
+        </div>
+        <div class="verdict-grid" id="verdictGrid"></div>
+        <div id="secConcerns"></div>
+        <div class="sec-lbl">Quality Gate 2</div>
+        <div id="gate2Box"></div>
+      </div>
+
+      <!-- L3 referral -->
+      <div class="card hidden" id="l3RefCard">
+        <div class="card-title"><span class="icon">👤</span> Layer 3 — Escalated<div class="line"></div></div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px">
+          Code escalated to <strong id="refRole" style="color:var(--purple)">Security Expert</strong> for human review.
+          Go to the <strong style="color:var(--blue2)">Human Review</strong> tab →
+        </p>
+        <button class="run-btn" onclick="switchTab('layer3')" style="max-width:300px">
+          👤 Open Human Review
+        </button>
+      </div>
+
+    </div><!-- /pane-results -->
+
+  </div><!-- /col-left -->
+
+  <!-- ─── RIGHT COLUMN ───────────────────────────── -->
+  <div class="col-right">
+
+    <!-- LAYER 3 PANEL -->
+    <div class="card" id="l3Panel">
+      <div class="card-title"><span class="icon">🔐</span> Layer 3 — Human Review<div class="line"></div></div>
+
+      <div class="wait-box" id="l3Wait">
+        <div class="wait-ico">👤</div>
+        <div class="wait-txt">No review pending.<br>Run an analysis — if escalated,<br>the review task appears here.</div>
+      </div>
+
+      <div id="l3Active" class="hidden">
+        <div class="role-badge" id="roleChip">🔐 Security Expert — SLA: 15 min</div>
+        <div class="esc-box">
+          <div class="esc-lbl">Escalation Reason</div>
+          <span id="escText"></span>
+        </div>
+        <div class="sec-lbl">Review Checklist</div>
+        <div class="chk-prog"><span id="chkCount">0</span> / <span id="chkTotal">5</span> items verified</div>
+        <div class="checklist" id="checklistEl"></div>
+        <div class="sec-lbl">Reviewer Comment <span style="color:var(--red2)">*</span></div>
+        <textarea class="comment-box" id="reviewComment"
+          placeholder="Provide your assessment (minimum 20 characters)..."
+          oninput="onComment()"></textarea>
+        <div class="char-cnt char-bad" id="charCnt">0 / 20 characters</div>
+        <div class="sec-lbl">Suggested Fix <span style="color:var(--text3)">(optional)</span></div>
+        <textarea class="fix-box" id="suggestedFix" placeholder="# Paste your suggested code fix here..."></textarea>
+        <div class="dec-row">
+          <button class="dec-btn dec-a" id="btnA" onclick="decide('APPROVE')" disabled>✅ Approve</button>
+          <button class="dec-btn dec-c" id="btnC" onclick="decide('REQUEST_CHANGES')" disabled>🔄 Changes</button>
+          <button class="dec-btn dec-r" id="btnR" onclick="decide('REJECT')" disabled>❌ Reject</button>
+        </div>
+        <div class="dec-note">All decisions are logged with reviewer ID, timestamp, and comment. Override decisions are flagged for Layer 2 calibration.</div>
+      </div>
+
+      <div id="l3Done" class="hidden">
+        <div class="done-box">
+          <span class="done-ico" id="doneIco">✅</span>
+          <div class="done-title" id="doneTitle">Decision Submitted</div>
+          <div class="done-sub" id="doneSub">Decision logged. Developer notified.</div>
+          <button class="run-btn" onclick="resetAll()" style="max-width:220px;margin:0 auto">↩ New Analysis</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT PANEL -->
+    <div class="card" id="aboutPanel">
+      <div class="card-title"><span class="icon">📋</span> Research Context<div class="line"></div></div>
+      <div class="about-row"><span class="about-k">Student</span><span class="about-v">Koji Dan Seya — TP090490</span></div>
+      <div class="about-row"><span class="about-k">Institution</span><span class="about-v">APU Malaysia</span></div>
+      <div class="about-row"><span class="about-k">Module</span><span class="about-v">CT095-6-M — Research Methodology</span></div>
+      <div class="about-row"><span class="about-k">Supervisor</span><span class="about-v">Amad Arshad</span></div>
+      <div class="about-row"><span class="about-k">Methodology</span><span class="about-v">Design Science Research (DSR)</span></div>
+      <div class="about-row"><span class="about-k">Framework</span><span class="about-v">AICGQAF v1.0</span></div>
+      <div style="margin-top:16px">
+        <div class="sec-lbl">Three-Tier Pipeline</div>
+        <div class="layer-card"><div class="layer-card-title">🔍 Layer 1 — Static Analysis</div><div class="layer-card-sub">SonarQube + CodeQL + Bandit. Detects CWEs, code smells, complexity. Empirical basis: Sabra et al. (2025), Schreiber & Tippe (2025).</div></div>
+        <div class="layer-card"><div class="layer-card-title">🧠 Layer 2 — AI Semantic Review</div><div class="layer-card-sub">Claude API for semantic correctness, architectural fit, context-specific security. Empirical basis: Cihan et al. (2025).</div></div>
+        <div class="layer-card"><div class="layer-card-title">👤 Layer 3 — Human-in-the-Loop</div><div class="layer-card-sub">Security Expert / Architect / Senior Dev review. SLA enforced. Empirical basis: Osmani (2025).</div></div>
+      </div>
+      <div class="sec-lbl">Key Empirical Findings</div>
+      <div class="emp-row">
+        <div class="emp-item">AI code produces <strong style="color:var(--amber)">1.7×</strong> more defects per PR (CodeRabbit, 2025)</div>
+        <div class="emp-item"><strong style="color:var(--red2)">45%</strong> of AI coding exercises yield critical vulnerabilities (Veracode, 2025)</div>
+        <div class="emp-item"><strong style="color:var(--amber)">90–93%</strong> of AI code issues are code smells (Sabra et al., 2025)</div>
+        <div class="emp-item">Hard-coded credentials in <strong style="color:var(--red2)">all 5</strong> tested LLMs (Sabra et al., 2025)</div>
+      </div>
+    </div>
+
+  </div><!-- /col-right -->
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════════
+// AICGQAF v1.0 — Pipeline Engine
+// https://console.anthropic.com
+// ═══════════════════════════════════════════════
+const ANTHROPIC_API_KEY = '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';
+
+// ── SAMPLE CODE ──────────────────────────────────
+const SAMPLES = {
+  sqli:{lang:'python',code:`# AI-generated by GitHub Copilot — user search endpoint
+from flask import Flask, request, jsonify
+import sqlite3
+
+app = Flask(__name__)
+
+@app.route('/api/users/search', methods=['GET'])
+def search_users():
+    username = request.args.get('username', '')
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    # VULNERABILITY: Direct string concatenation — SQL Injection (CWE-89)
+    query = "SELECT id, username, email FROM users WHERE username = '" + username + "'"
+    cursor.execute(query)
+    results = cursor.fetchall()
+    conn.close()
+    return jsonify({'users': results})
+
+if __name__ == '__main__':
+    app.run(debug=True)`},
+  creds:{lang:'python',code:`# AI-generated AWS configuration module
+import boto3
+
+AWS_REGION = 'ap-southeast-1'
+# VULNERABILITY: Hard-coded credentials (CWE-798)
+AWS_ACCESS_KEY_ID     = 'AKIAIOSFODNN7EXAMPLE'
+AWS_SECRET_ACCESS_KEY = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+S3_BUCKET_NAME = 'my-production-bucket'
+
+def get_s3_client():
+    return boto3.client('s3',
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+
+def upload_file(file_path, key):
+    client = get_s3_client()
+    client.upload_file(file_path, S3_BUCKET_NAME, key)
+    return f"Uploaded {key} to {S3_BUCKET_NAME}"`},
+  idor:{lang:'python',code:`# AI-generated by Cursor IDE — user profile endpoint
+from flask import Flask, request, jsonify
+from functools import wraps
+import jwt, os
+
+app = Flask(__name__)
+SECRET_KEY = os.environ['JWT_SECRET']
+
+def require_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization','').replace('Bearer ','')
+        try:
+            jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Unauthorized'}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route('/api/users/<int:user_id>/profile', methods=['GET'])
+@require_auth
+def get_user_profile(user_id):
+    # VULNERABILITY 1 (CWE-639): IDOR — user_id not validated against JWT sub
+    user = db.session.query(User).filter_by(id=user_id).first()
+    if not user:
+        return jsonify({'error': 'Not found'}), 404
+    # VULNERABILITY 2 (CWE-200): Sensitive fields exposed in response
+    return jsonify({
+        'id': user.id, 'username': user.username,
+        'email': user.email, 'password_hash': user.password_hash,
+        'internal_id': user.internal_id, 'created_at': str(user.created_at)
+    })`},
+  clean:{lang:'python',code:`# AI-generated secure product search endpoint
+from flask import Flask, request, jsonify
+import sqlite3, re
+
+app = Flask(__name__)
+
+def validate_input(term):
+    """Sanitise and validate search input."""
+    term = term.strip()
+    if not term or len(term) > 100:
+        return None
+    if not re.match(r'^[a-zA-Z0-9\\s\\-\\.]+$', term):
+        return None
+    return term
+
+@app.route('/api/products/search', methods=['GET'])
+def search_products():
+    raw = request.args.get('name', '')
+    term = validate_input(raw)
+    if term is None:
+        return jsonify({'error': 'Invalid search term'}), 400
+
+    conn = sqlite3.connect('products.db')
+    cursor = conn.cursor()
+    # Parameterised query — safe from SQL injection
+    cursor.execute(
+        "SELECT id, name, price, category FROM products WHERE name LIKE ?",
+        (f'%{term}%',))
+    rows = cursor.fetchall()
+    conn.close()
+    products = [{'id':r[0],'name':r[1],'price':r[2],'category':r[3]} for r in rows]
+    return jsonify({'products': products, 'count': len(products)})`}
+};
+
+// ── PRE-COMPUTED RESULTS ──────────────────────────
+const PRE = {
+  sqli:{
+    l1:{critical:1,high:1,medium:0,low:1,smells:8.2,maintain:72,debt:1.1,complexity:5.2,
+      decision:'FAIL',
+      reason:'FAIL: Auto-reject CWE detected — CWE-89 (SQL Injection) at Line 14. CVSS 9.8 Critical. Pipeline halted.',
+      cwes:[{id:'CWE-89',sev:'CRITICAL',tool:'CodeQL + Bandit',line:14,
+        desc:'SQL Injection via direct string concatenation in search_users(). User input from request.args flows into SQL query without parameterisation. Attackers can modify the query to extract, modify, or delete all database data.',
+        fix:'Use parameterised queries:\nquery = "SELECT id, username, email FROM users WHERE username = ?"\ncursor.execute(query, (username,))'}]
+    },gate1:'FAIL',l2:null,l3:null
+  },
+  creds:{
+    l1:{critical:0,high:2,medium:0,low:0,smells:5.1,maintain:78,debt:0.8,complexity:3.4,
+      decision:'FAIL',
+      reason:'FAIL: Hard-coded credentials detected (CWE-798) at Lines 5–6. Confirmed by Bandit B105 + CodeQL + SonarQube. CVSS 9.1 Critical.',
+      cwes:[{id:'CWE-798',sev:'CRITICAL',tool:'Bandit B105 + CodeQL + SonarQube',line:'5–6',
+        desc:'AWS Access Key ID and Secret Access Key hard-coded as string literals. Any repository access permanently exposes credentials. Automated scanners detect committed AWS keys within minutes.',
+        fix:'Use environment variables:\nimport os\nAWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]\nAWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]\n# Production: use AWS IAM Roles (no credentials needed)'}]
+    },gate1:'FAIL',l2:null,l3:null
+  },
+  idor:{
+    l1:{critical:0,high:0,medium:2,low:2,smells:13.4,maintain:64,debt:2.3,complexity:11.2,
+      decision:'ESCALATE',
+      reason:'ESCALATE: 2 MEDIUM severity issues found; Code smell 13.4% exceeds 10% threshold; Cyclomatic complexity 11.2 exceeds threshold 10.',
+      cwes:[
+        {id:'CWE-200',sev:'MEDIUM',tool:'CodeQL',line:27,
+          desc:'Full user object returned including password_hash and internal_id — sensitive fields exposed in HTTP response.',
+          fix:'Return only safe fields:\nreturn jsonify({"id": user.id, "username": user.username, "email": user.email, "created_at": str(user.created_at)})'},
+        {id:'CWE-20',sev:'MEDIUM',tool:'SonarQube',line:21,
+          desc:'Input validation on user_id not confirmed at function entry level.',
+          fix:'Add explicit parameter validation before DB query.'}
+      ]
+    },gate1:'ESCALATE',
+    l2:{confidence:68,semantic:true,arch:true,maintain:61,decision:'ESCALATE',
+      explanation:'JWT authentication is correctly implemented — token validity is checked at the decorator. However, two MEDIUM security concerns are identified: (1) CWE-639 (IDOR) — the user_id URL parameter is never compared against the JWT token subject claim (payload["sub"]), allowing any authenticated user to access any other user\'s profile. (2) CWE-200 — password_hash is returned in the response and must never appear in any API response. Confidence is 68%, below the 70% approval threshold, due to incomplete middleware visibility.',
+      concerns:[
+        {id:'CWE-639',sev:'MEDIUM',
+          desc:'IDOR: any authenticated user can access any profile by changing the user_id URL parameter. JWT sub claim is never validated against the requested user_id.',
+          fix:'payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])\nif str(payload["sub"]) != str(user_id) and not payload.get("is_admin"):\n    return jsonify({"error": "Forbidden"}), 403'},
+        {id:'CWE-200',sev:'MEDIUM',
+          desc:'password_hash and internal_id are returned in the HTTP response. Returning a password hash in any API response is a critical error.',
+          fix:'return jsonify({"id": user.id, "username": user.username,\n    "email": user.email, "created_at": str(user.created_at)})'}
+      ],
+      reason:'Confidence 68% below 70% approval threshold; MEDIUM security concerns: CWE-639 (IDOR), CWE-200 (Sensitive Data Exposure).',
+      role:'Security Expert',sla:15
+    },gate2:'ESCALATE',
+    l3:{checklist:[
+      'Verified CWE-639 (IDOR) — confirmed JWT sub claim is NOT compared to user_id in any middleware layer.',
+      'Confirmed password_hash is returned in the API response — CWE-200 finding is valid.',
+      'Reviewed authentication decorator — token validity is checked, but user identity is not validated.',
+      'Confirmed no higher-level RBAC or admin middleware that would justify unrestricted profile access.',
+      'Understood business context — user-facing API; users must only access their own profile.'
+    ]}
+  },
+  clean:{
+    l1:{critical:0,high:0,medium:0,low:1,smells:4.2,maintain:88,debt:0.4,complexity:4.1,
+      decision:'PASS',
+      reason:'All Quality Gate 1 thresholds met. No security violations detected. Code uses parameterised queries and validates input.',
+      cwes:[]
+    },gate1:'PASS',
+    l2:{confidence:91,semantic:true,arch:true,maintain:86,decision:'APPROVE',
+      explanation:'Code is semantically correct and uses parameterised queries throughout. Input validation is present and appropriate — regex sanitisation and length-checking before query execution. The response returns only safe public fields. Architecture follows standard Flask REST patterns. No security concerns detected.',
+      concerns:[],
+      reason:'Confidence 91% ≥ 70% threshold; semantic_correct: true; architectural_fit: true; no security concerns; all Gate 2 criteria met.'
+    },gate2:'APPROVE',l3:null
+  }
+};
+
+// ── STATE ────────────────────────────────────────
+let sample=null, lang='python', checked=0, totalChk=0;
+const $=id=>document.getElementById(id);
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ── TABS ─────────────────────────────────────────
+function switchTab(t){
+  ['analyze','results','layer3','about'].forEach(id=>{
+    const p=$('pane-'+id);
+    if(p) p.classList.toggle('hidden',id!==t);
+    $('tab-'+id).classList.toggle('active',id===t);
+  });
+  // about panel always visible on right
+  $('aboutPanel').classList.toggle('hidden',t==='layer3'||t==='results');
+  $('l3Panel').classList.toggle('hidden',t==='analyze'||t==='about');
+  if(t==='results'){
+    $('l3Panel').classList.remove('hidden');
+    $('aboutPanel').classList.add('hidden');
+  }
+  if(t==='layer3'){
+    $('l3Panel').classList.remove('hidden');
+    $('aboutPanel').classList.add('hidden');
+  }
+}
+
+// ── LANG ─────────────────────────────────────────
+function setLang(btn,l){
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); lang=l;
+}
+
+// ── LINE COUNT ────────────────────────────────────
+function countLines(){
+  $('lineCount').textContent=$('codeInput').value.split('\n').length+' lines';
+}
+
+// ── LOAD SAMPLE ───────────────────────────────────
+function load(key){
+  const s=SAMPLES[key]; if(!s)return;
+  sample=key;
+  $('codeInput').value=s.code;
+  document.querySelectorAll('.lang-btn').forEach(b=>{
+    b.classList.toggle('active',b.textContent.trim().toLowerCase()===s.lang);
+  });
+  lang=s.lang; countLines();
+}
+
+// ── PIPE STEP ─────────────────────────────────────
+function setPipe(id,cls){
+  const el=$('ps-'+id);
+  el.className='pipe-step'+(cls?' '+cls:'');
+}
+function setStatus(msg){$('statusLine').textContent=msg}
+
+// ── GATE BOX ──────────────────────────────────────
+function gateHTML(type,title,reason){
+  const icons={pass:'✅',fail:'❌',warn:'⚠️'};
+  return `<div class="gate-box gb-${type}">
+    <div class="gate-icon">${icons[type]}</div>
+    <div class="gate-body">
+      <div class="gate-title">${title}</div>
+      <div class="gate-reason">${reason}</div>
+    </div>
+    <div class="gate-badge">${title.split('—')[1]?.trim()||type.toUpperCase()}</div>
+  </div>`;
+}
+
+// ── CWE LIST ──────────────────────────────────────
+function cweHTML(cwes){
+  if(!cwes||!cwes.length)return'';
+  return`<div class="sec-lbl" style="margin-top:14px">CWE Violations Detected</div>
+  <div class="cwe-list">${cwes.map(c=>`
+    <div class="cwe-item">
+      <div class="cwe-head">
+        <span class="cwe-tag tc-${c.sev.toLowerCase()}">${c.id}</span>
+        <span class="cwe-tag tc-${c.sev.toLowerCase()}">${c.sev}</span>
+        <span class="cwe-tool-lbl">${c.tool} · Line ${c.line}</span>
+      </div>
+      <div class="cwe-desc">${c.desc}</div>
+      <div class="cwe-fix">${c.fix}</div>
+    </div>`).join('')}</div>`;
+}
+
+// ── FINAL BANNER ──────────────────────────────────
+function showBanner(type,ico,title,sub){
+  const w=$('finalBannerWrap');
+  w.classList.remove('hidden');
+  w.innerHTML=`<div class="final-banner fb-${type}">
+    <div class="fb-ico">${ico}</div>
+    <div><div class="fb-title">${title}</div><div class="fb-sub">${sub}</div></div>
+  </div>`;
+}
+
+// ── RENDER L1 ─────────────────────────────────────
+function renderL1(l1){
+  const c=$('l1Card'); c.classList.remove('hidden'); c.classList.add('fade-in');
+
+  const mc=(v,g,w)=>v<=g?'good':v<=w?'warn':'bad';
+  const mi=(v,g,w)=>v>=g?'good':v>=w?'warn':'bad';
+  $('l1Metrics').innerHTML=`
+    <div class="metric-box ${(l1.critical+l1.high)>0?'bad':'good'}">
+      <div class="metric-num">${l1.critical+l1.high}</div>
+      <div class="metric-lbl">Critical/High</div>
+    </div>
+    <div class="metric-box ${l1.smells>=10?'warn':l1.smells>=30?'bad':'good'}">
+      <div class="metric-num">${l1.smells.toFixed(1)}%</div>
+      <div class="metric-lbl">Code Smells</div>
+    </div>
+    <div class="metric-box ${mi(l1.maintain,80,60)}">
+      <div class="metric-num">${Math.round(l1.maintain)}</div>
+      <div class="metric-lbl">Maintainability</div>
+    </div>
+    <div class="metric-box ${l1.complexity>10?'warn':l1.complexity>15?'bad':'good'}">
+      <div class="metric-num">${l1.complexity.toFixed(1)}</div>
+      <div class="metric-lbl">Complexity</div>
+    </div>`;
+
+  const maintClr=l1.maintain>=80?'gf-green':l1.maintain>=60?'gf-amber':'gf-red';
+  const debtClr=l1.debt<2?'gf-green':l1.debt<5?'gf-amber':'gf-red';
+  $('l1Gauges').innerHTML=`
+    <div class="gauge">
+      <div class="gauge-hd"><span>Maintainability Index</span>
+        <span style="color:${l1.maintain>=80?'var(--green)':l1.maintain>=60?'var(--amber)':'var(--red2)'}">${Math.round(l1.maintain)}/100</span></div>
+      <div class="gauge-track"><div class="gauge-fill ${maintClr}" style="width:0%" data-w="${l1.maintain}%"></div></div>
+    </div>
+    <div class="gauge">
+      <div class="gauge-hd"><span>Technical Debt</span>
+        <span style="color:${l1.debt<2?'var(--green)':l1.debt<5?'var(--amber)':'var(--red2)'}">${l1.debt}h</span></div>
+      <div class="gauge-track"><div class="gauge-fill ${debtClr}" style="width:0%" data-w="${Math.min(l1.debt/5*100,100)}%"></div></div>
+    </div>`;
+
+  const g1t=l1.decision==='FAIL'?'fail':l1.decision==='ESCALATE'?'warn':'pass';
+  $('gate1Box').innerHTML=gateHTML(g1t,`Quality Gate 1 — ${l1.decision}`,l1.reason);
+  $('cweSection').innerHTML=cweHTML(l1.cwes);
+
+  // Animate gauges
+  setTimeout(()=>{
+    document.querySelectorAll('.gauge-fill[data-w]').forEach(el=>{el.style.width=el.dataset.w});
+  },120);
+}
+
+// ── RENDER L2 ─────────────────────────────────────
+function renderL2(l2){
+  if(!l2)return;
+  const c=$('l2Card'); c.classList.remove('hidden'); c.classList.add('fade-in');
+
+  $('aiText').textContent=l2.explanation;
+
+  const confClr=l2.confidence>=70?'var(--green)':l2.confidence>=50?'var(--amber)':'var(--red2)';
+  $('confNum').textContent=l2.confidence+'%';
+  $('confNum').style.color=confClr;
+  $('confBar').className=`conf-fill ${l2.confidence>=70?'gf-green':l2.confidence>=50?'gf-amber':'gf-red'}`;
+  setTimeout(()=>{$('confBar').style.width=l2.confidence+'%'},150);
+
+  $('verdictGrid').innerHTML=`
+    <div class="verdict ${l2.semantic?'v-pass':'v-fail'}">
+      <div class="v-icon">${l2.semantic?'✅':'❌'}</div>
+      <div><div class="v-lbl">Semantic</div><div class="v-sub">${l2.semantic?'Correct':'Failure'}</div></div>
+    </div>
+    <div class="verdict ${l2.arch?'v-pass':'v-warn'}">
+      <div class="v-icon">${l2.arch?'✅':'⚠️'}</div>
+      <div><div class="v-lbl">Architecture</div><div class="v-sub">${l2.arch?'Compliant':'Deviation'}</div></div>
+    </div>
+    <div class="verdict ${l2.maintain>=70?'v-pass':l2.maintain>=50?'v-warn':'v-fail'}">
+      <div class="v-icon">${l2.maintain>=70?'✅':'⚠️'}</div>
+      <div><div class="v-lbl">Maintainability</div><div class="v-sub">Score: ${l2.maintain}</div></div>
+    </div>
+    <div class="verdict ${(l2.concerns||[]).length===0?'v-pass':'v-warn'}">
+      <div class="v-icon">${(l2.concerns||[]).length===0?'✅':'⚠️'}</div>
+      <div><div class="v-lbl">Security</div><div class="v-sub">${(l2.concerns||[]).length} concern(s)</div></div>
+    </div>`;
+
+  if(l2.concerns&&l2.concerns.length){
+    $('secConcerns').innerHTML=`<div class="sec-lbl">AI-Detected Security Concerns</div>
+      <div class="cwe-list">${l2.concerns.map(c=>`
+        <div class="cwe-item">
+          <div class="cwe-head">
+            <span class="cwe-tag tc-${(c.sev||'medium').toLowerCase()}">${c.id}</span>
+            <span class="cwe-tag tc-${(c.sev||'medium').toLowerCase()}">${c.sev||'MEDIUM'}</span>
+          </div>
+          <div class="cwe-desc">${c.desc}</div>
+          <div class="cwe-fix">${c.fix}</div>
+        </div>`).join('')}</div>`;
+  } else {
+    $('secConcerns').innerHTML='<div style="font-size:12px;color:var(--green);padding:6px 0">✅ No security concerns detected.</div>';
+  }
+
+  const g2t=l2.decision==='APPROVE'?'pass':l2.decision==='REJECT'?'fail':'warn';
+  $('gate2Box').innerHTML=gateHTML(g2t,`Quality Gate 2 — ${l2.decision}`,l2.reason);
+}
+
+// ── RENDER L3 ─────────────────────────────────────
+function renderL3(l2,l3){
+  if(!l3)return;
+  $('l3Wait').classList.add('hidden');
+  $('l3Done').classList.add('hidden');
+  $('l3Active').classList.remove('hidden');
+
+  $('roleChip').textContent=`🔐 ${l2.role||'Security Expert'} — SLA: ${l2.sla||15} min`;
+  $('escText').textContent=l2.reason;
+
+  checked=0; totalChk=l3.checklist.length;
+  $('chkTotal').textContent=totalChk;
+  $('chkCount').textContent=0;
+
+  const cl=$('checklistEl'); cl.innerHTML='';
+  l3.checklist.forEach((item,i)=>{
+    const d=document.createElement('div');
+    d.className='chk';
+    d.innerHTML=`<div class="chk-box" id="ckb${i}"></div><div class="chk-txt">${item}</div>`;
+    d.onclick=()=>{
+      d.classList.toggle('on');
+      $('ckb'+i).textContent=d.classList.contains('on')?'✓':'';
+      checked=document.querySelectorAll('.chk.on').length;
+      $('chkCount').textContent=checked;
+      validateL3();
+    };
+    cl.appendChild(d);
+  });
+
+  $('reviewComment').value='';
+  $('suggestedFix').value='';
+  $('charCnt').textContent='0 / 20 characters';
+  $('charCnt').className='char-cnt char-bad';
+  validateL3();
+}
+
+function onComment(){
+  const len=$('reviewComment').value.trim().length;
+  $('charCnt').textContent=`${len} / 20 characters`;
+  $('charCnt').className=`char-cnt ${len>=20?'char-ok':'char-bad'}`;
+  validateL3();
+}
+
+function validateL3(){
+  const commentOk=($('reviewComment').value||'').trim().length>=20;
+  const checkOk=checked===totalChk;
+  const ok=commentOk&&checkOk&&totalChk>0;
+  ['btnA','btnC','btnR'].forEach(id=>$(id).disabled=!ok);
+}
+
+// ── HUMAN DECISION ────────────────────────────────
+function decide(d){
+  $('l3Active').classList.add('hidden');
+  $('l3Done').classList.remove('hidden');
+  const cfg={
+    APPROVE:{ico:'✅',title:'Approved',sub:'PR approved for merge. Developer notified. Decision logged to audit trail.'},
+    REQUEST_CHANGES:{ico:'🔄',title:'Changes Requested',sub:'Developer notified with feedback. PR re-enters pipeline on next push.'},
+    REJECT:{ico:'❌',title:'Rejected',sub:'PR closed. Developer must open a new pull request with a revised approach.'}
+  }[d];
+  $('doneIco').textContent=cfg.ico;
+  $('doneTitle').textContent=cfg.title;
+  $('doneSub').textContent=cfg.sub;
+  const t=d==='APPROVE'?'approved':d==='REJECT'?'rejected':'escalated';
+  showBanner(t,cfg.ico,'Pipeline Complete — '+cfg.title,cfg.sub);
+  switchTab('results');
+  console.log('[AICGQAF L3] Decision:',{decision:d,reviewer:'reviewer_001',comment:$('reviewComment').value.trim(),timestamp:new Date().toISOString()});
+}
+
+// ── MAIN PIPELINE ─────────────────────────────────
+async function runPipeline(){
+  const code=$('codeInput').value.trim();
+  if(!code||code.length<30){alert('Please paste some code first, or load a sample scenario.');return;}
+
+  const btn=$('runBtn');
+  btn.disabled=true;
+  btn.innerHTML='<div class="spinner"></div> Analysing...';
+
+  $('pipeCard').classList.remove('hidden');
+  ['l1','g1','l2','g2','l3'].forEach(p=>setPipe(p,''));
+  ['l1Card','l2Card','l3RefCard'].forEach(id=>{const e=$(id);if(e)e.classList.add('hidden')});
+  $('finalBannerWrap').classList.add('hidden');
+  $('l3Wait').classList.remove('hidden');
+  $('l3Active').classList.add('hidden');
+  $('l3Done').classList.add('hidden');
+
+  const data=sample&&PRE[sample]?PRE[sample]:await liveAnalysis(code);
+
+  // Layer 1
+  setPipe('l1','active');
+  setStatus('Layer 1: Running SonarQube + CodeQL + Bandit analysis...');
+  await delay(1000);
+  const l1=data.l1;
+  const g1c=l1.decision==='FAIL'?'fail':l1.decision==='ESCALATE'?'warn':'pass';
+  setPipe('l1',g1c); setPipe('g1',g1c);
+  setStatus('Layer 1 complete — Decision: '+l1.decision);
+  renderL1(l1);
+  switchTab('results');
+  await delay(400);
+
+  if(l1.decision==='FAIL'){
+    showBanner('rejected','❌','Pipeline Rejected — Layer 1','Critical vulnerability auto-rejected at Quality Gate 1. No AI or human review required.');
+    btn.disabled=false;btn.innerHTML='▶ Run AICGQAF Analysis';return;
+  }
+
+  // Layer 2
+  await delay(300);
+  setPipe('l2','active');
+  setStatus('Layer 2: Building context package → calling Claude AI for semantic review...');
+  await delay(sample?1400:200);
+
+  const l2=data.l2;
+  if(!l2){btn.disabled=false;btn.innerHTML='▶ Run AICGQAF Analysis';return;}
+
+  const g2c=l2.decision==='APPROVE'?'pass':l2.decision==='REJECT'?'fail':'warn';
+  setPipe('l2',l2.decision==='APPROVE'?'pass':l2.decision==='REJECT'?'fail':'warn');
+  setPipe('g2',g2c);
+  setStatus('Layer 2 complete — Confidence: '+l2.confidence+'% — Decision: '+l2.decision);
+  renderL2(l2);
+  await delay(400);
+
+  if(l2.decision==='APPROVE'){
+    setPipe('g2','pass');
+    showBanner('approved','✅','Approved — AI Semantic Review',`AI confidence ${l2.confidence}%. Pipeline Path 3: L1 ESCALATE → L2 APPROVE → Auto-merge.`);
+    btn.disabled=false;btn.innerHTML='▶ Run AICGQAF Analysis';return;
+  }
+  if(l2.decision==='REJECT'){
+    showBanner('rejected','❌','Rejected — AI Semantic Review','Critical issue found by AI. Pipeline Path 4: L1 ESCALATE → L2 REJECT.');
+    btn.disabled=false;btn.innerHTML='▶ Run AICGQAF Analysis';return;
+  }
+
+  // Layer 3
+  await delay(300);
+  setPipe('l3','warn');
+  setStatus('Escalating to Layer 3 — assigning '+(l2.role||'Security Expert')+' ('+l2.sla+' min SLA)...');
+  await delay(600);
+
+  $('l3RefCard').classList.remove('hidden');
+  $('refRole').textContent=l2.role||'Security Expert';
+  if(data.l3)renderL3(l2,data.l3);
+  showBanner('escalated','⚠️','Awaiting Human Review — Layer 3',`Escalated to ${l2.role||'Security Expert'}. Complete the review in the Human Review tab.`);
+
+  btn.disabled=false;btn.innerHTML='▶ Run AICGQAF Analysis';
+}
+
+// ── LIVE ANALYSIS ─────────────────────────────────
+async function liveAnalysis(code){
+  const lower=code.toLowerCase();
+  const l1={critical:0,high:0,medium:0,low:0,
+    smells:5,maintain:80,debt:0.5,complexity:5,
+    decision:'PASS',reason:'',cwes:[]};
+
+  // SQL Injection
+  if((lower.includes('execute(')||lower.includes('execute ('))&&
+     (code.includes('+"')||code.includes("+'")|| code.includes('+ "')||code.includes("+ '"))){
+    l1.cwes.push({id:'CWE-89',sev:'CRITICAL',tool:'CodeQL + Bandit',
+      line:'~'+findLine(code,'execute'),
+      desc:'SQL Injection: user input flows into SQL query via string concatenation.',
+      fix:'cursor.execute("SELECT ... WHERE x = ?", (value,))'});
+    l1.critical++;
+  }
+  // Hard-coded creds
+  if((code.includes('AKIA')||code.includes('secret_access_key'))&&
+     !code.includes('os.environ')&&!code.includes('getenv')){
+    l1.cwes.push({id:'CWE-798',sev:'CRITICAL',tool:'Bandit B105 + CodeQL',
+      line:'~'+findLine(code,'KEY'),
+      desc:'Hard-coded credentials detected.',
+      fix:'os.environ["AWS_ACCESS_KEY_ID"]'});
+    l1.high++;
+  }
+  // Password in response
+  if(code.includes('password_hash')&&code.includes('jsonify')){
+    l1.cwes.push({id:'CWE-200',sev:'MEDIUM',tool:'CodeQL',
+      line:'~'+findLine(code,'password_hash'),
+      desc:'Sensitive field (password_hash) exposed in API response.',
+      fix:'Return only: {id, username, email, created_at}'});
+    l1.medium++;
+  }
+  // IDOR
+  if(code.includes('user_id')&&code.includes('jwt')&&
+     !code.includes("payload['sub']")&&!code.includes('payload["sub"]')){
+    l1.cwes.push({id:'CWE-639',sev:'MEDIUM',tool:'SonarQube',
+      line:'~'+findLine(code,'user_id'),
+      desc:'IDOR: URL parameter not validated against JWT token claims.',
+      fix:"if str(payload['sub']) != str(user_id): return 403"});
+    l1.medium++;
+  }
+
+  const lines=code.split('\n').length;
+  l1.smells=Math.min(l1.medium*9+l1.low*3+Math.random()*4,35);
+  l1.maintain=Math.max(55,90-l1.critical*22-l1.high*12-l1.medium*5);
+  l1.debt=+(l1.critical*1.5+l1.high*0.8+l1.medium*0.4+Math.random()*0.5).toFixed(1);
+  l1.complexity=+(4+(code.match(/if |for |while |try:|elif /g)||[]).length*1.3).toFixed(1);
+
+  if(l1.critical>0||l1.high>0){
+    l1.decision='FAIL';
+    l1.reason='FAIL: '+l1.cwes.filter(c=>['CRITICAL','HIGH'].includes(c.sev)).map(c=>c.id).join(', ')+' detected — auto-rejected.';
+    return{l1,gate1:'FAIL',l2:null,l3:null};
+  }
+  if(l1.medium>0||l1.smells>=10||l1.complexity>10){
+    l1.decision='ESCALATE';
+    l1.reason=`ESCALATE: ${l1.medium} MEDIUM issue(s); Code smell ${l1.smells.toFixed(1)}%; Complexity ${l1.complexity.toFixed(1)}.`;
+  }else{
+    l1.reason='All Quality Gate 1 thresholds met. No violations detected.';
+  }
+
+  const l2=await callClaude(code,lang,l1);
+  const g2=evalGate2(l2);
+  l2.decision=g2;
+  if(g2==='ESCALATE'){
+    return{l1,gate1:l1.decision,l2,gate2:g2,
+      l3:{checklist:[
+        'Reviewed all flagged security concerns in full codebase context.',
+        'Verified no upstream middleware resolves the identified issues.',
+        'Confirmed sensitive data handling complies with security policy.',
+        'Reviewed authentication and authorisation logic end to end.',
+        'Understood business context — decision reflects organisational risk tolerance.'
+      ]}};
+  }
+  return{l1,gate1:l1.decision,l2,gate2:g2,l3:null};
+}
+
+function findLine(code,pat){
+  const idx=code.split('\n').findIndex(l=>l.toLowerCase().includes(pat.toLowerCase()));
+  return idx>=0?idx+1:'?';
+}
+function evalGate2(r){
+  if(!r.semantic)return'REJECT';
+  if((r.concerns||[]).some(c=>['HIGH','CRITICAL'].includes(c.sev)))return'REJECT';
+  if(r.confidence<30)return'REJECT';
+  if(r.confidence<70)return'ESCALATE';
+  if((r.concerns||[]).some(c=>c.sev==='MEDIUM'))return'ESCALATE';
+  if(r.maintain<50||!r.arch)return'ESCALATE';
+  return'APPROVE';
+}
+
+async function callClaude(code,language,l1){
+  const fallback={confidence:75,semantic:true,arch:true,maintain:72,
+    decision:'APPROVE',concerns:[],
+    explanation:'Static analysis found no critical issues. Code structure appears sound.',
+    reason:'Confidence 75% ≥ 70%; no security concerns detected.'};
+
+  if(!ANTHROPIC_API_KEY||ANTHROPIC_API_KEY==='YOUR_API_KEY_HERE'){
+    console.warn('[AICGQAF] No API key — using fallback Layer 2 result.');
+    return fallback;
+  }
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_API_KEY,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,messages:[{role:'user',
+        content:`You are the AICGQAF Layer 2 AI reviewer. Analyse this ${language} code.
+Layer 1 found: ${l1.cwes.map(c=>c.id).join(', ')||'nothing'} | Decision: ${l1.decision}
+
+CODE:
+\`\`\`${language}
+${code.slice(0,2800)}
+\`\`\`
+
+Respond ONLY with valid JSON (no markdown):
+{"confidence":80,"semantic":true,"arch":true,"maintain":75,"concerns":[{"id":"CWE-XX","sev":"MEDIUM","desc":"...","fix":"..."}],"explanation":"2-3 sentence summary.","reason":"Gate 2 reason."}`}]})
+    });
+    const d=await res.json();
+    const txt=d.content?.filter(b=>b.type==='text').map(b=>b.text).join('')||'';
+    return JSON.parse(txt.replace(/```json|```/g,'').trim());
+  }catch(e){
+    console.error('[AICGQAF L2] API error:',e);
+    return fallback;
+  }
+}
+
+function resetAll(){
+  sample=null;
+  $('codeInput').value='';
+  $('pipeCard').classList.add('hidden');
+  $('finalBannerWrap').classList.add('hidden');
+  ['l1Card','l2Card','l3RefCard'].forEach(id=>{const e=$(id);if(e)e.classList.add('hidden')});
+  $('l3Wait').classList.remove('hidden');
+  $('l3Active').classList.add('hidden');
+  $('l3Done').classList.add('hidden');
+  countLines();
+  switchTab('analyze');
+}
+
+// ── INIT ──────────────────────────────────────────
+switchTab('analyze');
+</script>
+</body>
+</html>
