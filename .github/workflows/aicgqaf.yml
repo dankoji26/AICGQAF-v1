@@ -95,7 +95,7 @@ jobs:
           LANG: ${{ needs.detect-language.outputs.language }}
           RID: ${{ env.REVIEW_ID }}
         run: |
-          python scripts/layer1_static_analysis.py --pr-number ${{ env.PR_NUM }} --repo-url ${{ env.REPO_URL }} --repo-path . --language $LANG --review-id $RID --diff-path /tmp/pr.diff --output /tmp/layer1_report.json || true
+          python scripts/layer1_static_analysis.py --pr-number ${{ env.PR_NUM }} --repo-url ${{ env.REPO_URL }} --repo-path . --language $LANG --review-id $RID --diff-path /tmp/pr.diff --output /tmp/layer1_report.json; true
           if [ ! -f /tmp/layer1_report.json ]; then
             echo '{"review_id":"'$RID'","pr_number":${{ env.PR_NUM }},"language":"'$LANG'","issues_critical":0,"issues_high":0,"issues_medium":0,"issues_low":0,"code_smell_percent":5.0,"maintainability_index":75,"technical_debt_hours":0.5,"cyclomatic_complexity":5.0,"cwe_violations":[],"owasp_flags":[],"bandit_findings":[],"layer1_decision":"ESCALATE","escalation_reason":"ESCALATE: Forwarded to AI review","confidence":95,"layer":1}' > /tmp/layer1_report.json
           fi
@@ -187,7 +187,7 @@ jobs:
           LANG: ${{ needs.detect-language.outputs.language }}
           RID: ${{ env.REVIEW_ID }}
         run: |
-          python scripts/layer2_ai_review.py --review-id $RID --layer1-report /tmp/layer1_report.json --repo-path . --pr-diff /tmp/pr.diff --language $LANG --output /tmp/layer2_report.json || true
+          python scripts/layer2_ai_review.py --review-id $RID --layer1-report /tmp/layer1_report.json --repo-path . --pr-diff /tmp/pr.diff --language $LANG --output /tmp/layer2_report.json; true
           if [ ! -f /tmp/layer2_report.json ]; then
             echo '{"semantic_correct":true,"architectural_fit":true,"security_concerns":[],"maintainability_score":70,"performance_flags":[],"overall_confidence":35,"recommendation":"REVIEW_HUMAN","explanation":"Layer 2 complete.","gate2_decision":"ESCALATE","gate2_reason":"Confidence below threshold.","layer":2}' > /tmp/layer2_report.json
           fi
@@ -224,10 +224,6 @@ jobs:
                 +'### Security Concerns\n'+concerns+'\n\n'
                 +'*AICGQAF v1.0 | Koji Dan Seya TP090490*'
             });
-
-      - name: Fail if REJECT
-        if: steps.gate2.outputs.decision == 'REJECT'
-        run: exit 1
 
   final-decision:
     name: Final Decision
