@@ -1,7 +1,5 @@
-# ============================================================
-# AICGQAF v1.0 - GitHub Actions Pipeline (Clean Version)
+# AICGQAF v1.0 - GitHub Actions Pipeline
 # Koji Dan Seya | TP090490 | CT095-6-M
-# ============================================================
 
 name: AICGQAF Quality Assurance Pipeline
 
@@ -12,7 +10,7 @@ on:
       - master
 
 concurrency:
-  group: aicgqaf-pr-${{ github.event.pull_request.number }}
+  group: aicgqaf-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -23,7 +21,7 @@ permissions:
 env:
   REVIEW_ID: ${{ github.run_id }}-${{ github.event.pull_request.number }}
   PR_NUMBER: ${{ github.event.pull_request.number }}
-  REPO_URL:  ${{ github.event.repository.html_url }}
+  REPO_URL: ${{ github.event.repository.html_url }}
 
 jobs:
 
@@ -41,18 +39,18 @@ jobs:
       - name: Detect primary language
         id: detect
         run: |
-          PY=$(find . -name "*.py" ! -path "./.git/*" | wc -l)
-          JS=$(find . -name "*.js" -o -name "*.ts" | grep -v ".git" | wc -l)
-          JV=$(find . -name "*.java" ! -path "./.git/*" | wc -l)
-          CS=$(find . -name "*.cs" ! -path "./.git/*" | wc -l)
+          PY=$(find . -name '*.py' ! -path './.git/*' | wc -l)
+          JS=$(find . -name '*.js' ! -path './.git/*' | wc -l)
+          JV=$(find . -name '*.java' ! -path './.git/*' | wc -l)
+          CS=$(find . -name '*.cs' ! -path './.git/*' | wc -l)
           if [ "$PY" -ge "$JS" ] && [ "$PY" -ge "$JV" ] && [ "$PY" -ge "$CS" ]; then
-            LANG="python"
+            LANG=python
           elif [ "$JS" -ge "$JV" ] && [ "$JS" -ge "$CS" ]; then
-            LANG="javascript"
+            LANG=javascript
           elif [ "$JV" -ge "$CS" ]; then
-            LANG="java"
+            LANG=java
           else
-            LANG="csharp"
+            LANG=csharp
           fi
           echo "Detected: $LANG"
           echo "language=$LANG" >> $GITHUB_OUTPUT
@@ -64,7 +62,6 @@ jobs:
     timeout-minutes: 15
     outputs:
       l1_decision: ${{ steps.gate1.outputs.decision }}
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -78,26 +75,24 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install dependencies
         run: pip install boto3 requests bandit --quiet
 
-      - name: Run Bandit Python security scan
+      - name: Run Bandit scan
         if: needs.detect-language.outputs.language == 'python'
-        run: |
-          bandit -r . --exclude .git,tests -f json -o /tmp/bandit-results.json --confidence-level medium --severity-level medium -q || true
+        run: bandit -r . --exclude .git -f json -o /tmp/bandit.json -q || true
 
       - name: Generate PR diff
         run: |
           git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > /tmp/pr.diff
-          echo "Diff lines: $(wc -l < /tmp/pr.diff)"
+          echo "Diff lines $(wc -l < /tmp/pr.diff)"
 
       - name: Upload diff to S3
-        run: |
-          aws s3 cp /tmp/pr.diff s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/pr.diff
+        run: aws s3 cp /tmp/pr.diff s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/pr.diff
 
-      - name: Run Layer 1 analysis script
+      - name: Run Layer 1 script
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
@@ -106,44 +101,30 @@ jobs:
           SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
           AWS_REGION_NAME: ${{ secrets.AWS_REGION }}
         run: |
-          python scripts/layer1_static_analysis.py             --pr-number ${{ env.PR_NUMBER }}             --repo-url ${{ env.REPO_URL }}             --repo-path .             --language ${{ needs.detect-language.outputs.language }}             --review-id ${{ env.REVIEW_ID }}             --diff-path /tmp/pr.diff             --output /tmp/layer1_report.json || true
-
+          python scripts/layer1_static_analysis.py \
+            --pr-number ${{ env.PR_NUMBER }} \
+            --repo-url ${{ env.REPO_URL }} \
+            --repo-path . \
+            --language ${{ needs.detect-language.outputs.language }} \
+            --review-id ${{ env.REVIEW_ID }} \
+            --diff-path /tmp/pr.diff \
+            --output /tmp/layer1_report.json || true
           if [ ! -f /tmp/layer1_report.json ]; then
             python3 -c "
 import json
-r = {
-  'review_id': '${{ env.REVIEW_ID }}',
-  'pr_number': ${{ env.PR_NUMBER }},
-  'language': '${{ needs.detect-language.outputs.language }}',
-  'issues_critical': 0,
-  'issues_high': 0,
-  'issues_medium': 0,
-  'issues_low': 0,
-  'code_smell_percent': 5.0,
-  'maintainability_index': 75,
-  'technical_debt_hours': 0.5,
-  'cyclomatic_complexity': 5.0,
-  'cwe_violations': [],
-  'owasp_flags': [],
-  'bandit_findings': [],
-  'layer1_decision': 'ESCALATE',
-  'escalation_reason': 'ESCALATE: Forwarded to AI review',
-  'confidence': 95,
-  'layer': 1
-}
-json.dump(r, open('/tmp/layer1_report.json', 'w'), indent=2)
-print('Minimal report created')
+r={'review_id':'${{ env.REVIEW_ID }}','pr_number':${{ env.PR_NUMBER }},'language':'${{ needs.detect-language.outputs.language }}','issues_critical':0,'issues_high':0,'issues_medium':0,'issues_low':0,'code_smell_percent':5.0,'maintainability_index':75,'technical_debt_hours':0.5,'cyclomatic_complexity':5.0,'cwe_violations':[],'owasp_flags':[],'bandit_findings':[],'layer1_decision':'ESCALATE','escalation_reason':'ESCALATE: Forwarded to AI review','confidence':95,'layer':1}
+json.dump(r,open('/tmp/layer1_report.json','w'),indent=2)
+print('Report created')
 "
           fi
-
           aws s3 cp /tmp/layer1_report.json s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/layer1_report.json
 
-      - name: Evaluate Quality Gate 1
+      - name: Evaluate Gate 1
         id: gate1
         run: |
-          DECISION=$(python3 -c "import json; r=json.load(open('/tmp/layer1_report.json')); print(r.get('layer1_decision','ESCALATE'))")
-          echo "decision=$DECISION" >> $GITHUB_OUTPUT
-          echo "Gate 1 Decision: $DECISION"
+          D=$(python3 -c "import json; r=json.load(open('/tmp/layer1_report.json')); print(r.get('layer1_decision','ESCALATE'))")
+          echo "decision=$D" >> $GITHUB_OUTPUT
+          echo "Gate 1: $D"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -151,62 +132,34 @@ print('Minimal report created')
           path: /tmp/layer1_report.json
           retention-days: 30
 
-      - name: Post Layer 1 comment to PR
+      - name: Post Layer 1 PR comment
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const r = JSON.parse(fs.readFileSync('/tmp/layer1_report.json', 'utf8'));
+            const r = JSON.parse(fs.readFileSync('/tmp/layer1_report.json','utf8'));
             const d = r.layer1_decision;
-            const icons = { PASS: 'PASS', ESCALATE: 'ESCALATE', FAIL: 'FAIL' };
-            const cwes = (r.cwe_violations || []).map(c =>
-              '- ' + c.cwe_id + ' (' + c.severity + ') - ' + c.description
-            ).join('
-') || 'No CWE violations detected.';
-            const body = '## AICGQAF v1.0 - Layer 1 Static Analysis
-
-'
-              + '**Review ID:** ' + '${{ env.REVIEW_ID }}' + '
-'
-              + '**Decision:** ' + d + '
-'
-              + '**Reason:** ' + r.escalation_reason + '
-
-'
-              + '| Metric | Value |
-|--------|-------|
-'
-              + '| Critical Issues | ' + r.issues_critical + ' |
-'
-              + '| High Issues | ' + r.issues_high + ' |
-'
-              + '| Medium Issues | ' + r.issues_medium + ' |
-'
-              + '| Code Smell % | ' + r.code_smell_percent + '% |
-'
-              + '| Maintainability | ' + r.maintainability_index + '/100 |
-'
-              + '| Technical Debt | ' + r.technical_debt_hours + 'h |
-
-'
-              + '### CWE Violations
-' + cwes + '
-
-'
-              + '*AICGQAF v1.0 | Koji Dan Seya TP090490 | CT095-6-M*';
+            const cwes = (r.cwe_violations||[]).map(c => '- '+c.cwe_id+' ('+c.severity+'): '+c.description).join('\n') || 'No CWE violations detected.';
             await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner: context.repo.owner, repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-              body: body
+              body: '## AICGQAF v1.0 - Layer 1 Static Analysis\n\n'
+                + '**Decision:** ' + d + '\n'
+                + '**Reason:** ' + r.escalation_reason + '\n\n'
+                + '| Metric | Value |\n|--------|-------|\n'
+                + '| Critical | ' + r.issues_critical + ' |\n'
+                + '| High | ' + r.issues_high + ' |\n'
+                + '| Medium | ' + r.issues_medium + ' |\n'
+                + '| Code Smells | ' + r.code_smell_percent + '% |\n'
+                + '| Maintainability | ' + r.maintainability_index + '/100 |\n\n'
+                + '### CWE Violations\n' + cwes + '\n\n'
+                + '*AICGQAF v1.0 | Koji Dan Seya TP090490*'
             });
 
-      - name: Fail pipeline if Gate 1 FAIL
+      - name: Fail if Gate 1 FAIL
         if: steps.gate1.outputs.decision == 'FAIL'
-        run: |
-          echo "Layer 1 FAIL - critical vulnerability detected. PR blocked."
-          exit 1
+        run: exit 1
 
   layer2-ai-review:
     name: Layer 2 AI Semantic Review
@@ -216,7 +169,6 @@ print('Minimal report created')
     timeout-minutes: 10
     outputs:
       l2_decision: ${{ steps.gate2.outputs.decision }}
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -230,7 +182,7 @@ print('Minimal report created')
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install dependencies
         run: pip install boto3 requests --quiet
@@ -240,11 +192,12 @@ print('Minimal report created')
           name: layer1-report-${{ env.REVIEW_ID }}
           path: /tmp
 
-      - name: Download diff from S3
+      - name: Get PR diff
         run: |
-          aws s3 cp s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/pr.diff /tmp/pr.diff || git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > /tmp/pr.diff
+          aws s3 cp s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/pr.diff /tmp/pr.diff || \
+          git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > /tmp/pr.diff
 
-      - name: Run Layer 2 AI review
+      - name: Run Layer 2 script
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
@@ -253,36 +206,24 @@ print('Minimal report created')
           SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
           AWS_REGION_NAME: ${{ secrets.AWS_REGION }}
         run: |
-          python scripts/layer2_ai_review.py             --review-id ${{ env.REVIEW_ID }}             --layer1-report /tmp/layer1_report.json             --repo-path .             --pr-diff /tmp/pr.diff             --language ${{ needs.detect-language.outputs.language }}             --output /tmp/layer2_report.json || true
-
+          python scripts/layer2_ai_review.py \
+            --review-id ${{ env.REVIEW_ID }} \
+            --layer1-report /tmp/layer1_report.json \
+            --repo-path . \
+            --pr-diff /tmp/pr.diff \
+            --language ${{ needs.detect-language.outputs.language }} \
+            --output /tmp/layer2_report.json || true
           if [ ! -f /tmp/layer2_report.json ]; then
-            python3 -c "
-import json
-r = {
-  'semantic_correct': True,
-  'architectural_fit': True,
-  'security_concerns': [],
-  'maintainability_score': 70,
-  'performance_flags': [],
-  'overall_confidence': 35,
-  'recommendation': 'REVIEW_HUMAN',
-  'explanation': 'Layer 2 complete. Escalating for human review.',
-  'gate2_decision': 'ESCALATE',
-  'gate2_reason': 'Confidence below threshold - human review required.',
-  'layer': 2
-}
-json.dump(r, open('/tmp/layer2_report.json', 'w'), indent=2)
-"
+            python3 -c "import json; json.dump({'semantic_correct':True,'architectural_fit':True,'security_concerns':[],'maintainability_score':70,'performance_flags':[],'overall_confidence':35,'recommendation':'REVIEW_HUMAN','explanation':'Layer 2 complete.','gate2_decision':'ESCALATE','gate2_reason':'Confidence below threshold.','layer':2},open('/tmp/layer2_report.json','w'),indent=2)"
           fi
-
           aws s3 cp /tmp/layer2_report.json s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/layer2_report.json
 
-      - name: Evaluate Quality Gate 2
+      - name: Evaluate Gate 2
         id: gate2
         run: |
-          DECISION=$(python3 -c "import json; r=json.load(open('/tmp/layer2_report.json')); print(r.get('gate2_decision','ESCALATE'))")
-          echo "decision=$DECISION" >> $GITHUB_OUTPUT
-          echo "Gate 2 Decision: $DECISION"
+          D=$(python3 -c "import json; r=json.load(open('/tmp/layer2_report.json')); print(r.get('gate2_decision','ESCALATE'))")
+          echo "decision=$D" >> $GITHUB_OUTPUT
+          echo "Gate 2: $D"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -290,45 +231,23 @@ json.dump(r, open('/tmp/layer2_report.json', 'w'), indent=2)
           path: /tmp/layer2_report.json
           retention-days: 30
 
-      - name: Post Layer 2 comment to PR
+      - name: Post Layer 2 PR comment
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const r = JSON.parse(fs.readFileSync('/tmp/layer2_report.json', 'utf8'));
-            const d = r.gate2_decision;
-            const concerns = (r.security_concerns || []).map(c =>
-              '- ' + (c.cwe_id || c.id) + ' (' + (c.severity || c.sev) + '): ' + (c.description || c.desc)
-            ).join('
-') || 'No security concerns detected.';
-            const body = '## AICGQAF v1.0 - Layer 2 AI Semantic Review
-
-'
-              + '**Model:** Claude claude-sonnet-4-6
-'
-              + '**Decision:** ' + d + '
-'
-              + '**Confidence:** ' + r.overall_confidence + '%
-
-'
-              + '### AI Analysis
-' + r.explanation + '
-
-'
-              + '### Security Concerns
-' + concerns + '
-
-'
-              + '**Gate 2 Reason:** ' + r.gate2_reason + '
-
-'
-              + '*AICGQAF v1.0 | Koji Dan Seya TP090490 | CT095-6-M*';
+            const r = JSON.parse(fs.readFileSync('/tmp/layer2_report.json','utf8'));
+            const concerns = (r.security_concerns||[]).map(c => '- '+(c.cwe_id||'?')+': '+(c.description||'')).join('\n') || 'No concerns.';
             await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner: context.repo.owner, repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-              body: body
+              body: '## AICGQAF v1.0 - Layer 2 AI Semantic Review\n\n'
+                + '**Decision:** ' + r.gate2_decision + '\n'
+                + '**Confidence:** ' + r.overall_confidence + '%\n\n'
+                + '### Analysis\n' + r.explanation + '\n\n'
+                + '### Security Concerns\n' + concerns + '\n\n'
+                + '*AICGQAF v1.0 | Koji Dan Seya TP090490*'
             });
 
       - name: Fail if Gate 2 REJECT
@@ -344,7 +263,6 @@ json.dump(r, open('/tmp/layer2_report.json', 'w'), indent=2)
       needs.layer1-static-analysis.result != 'failure' &&
       (needs.layer2-ai-review.result == 'success' || needs.layer2-ai-review.result == 'skipped')
     timeout-minutes: 5
-
     steps:
       - uses: actions/checkout@v4
 
@@ -356,7 +274,7 @@ json.dump(r, open('/tmp/layer2_report.json', 'w'), indent=2)
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install dependencies
         run: pip install boto3 requests --quiet
@@ -384,8 +302,12 @@ json.dump(r, open('/tmp/layer2_report.json', 'w'), indent=2)
           SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
           AWS_REGION_NAME: ${{ secrets.AWS_REGION }}
         run: |
-          L2=""
-          if [ -f /tmp/layer2_report.json ]; then
-            L2="--layer2-report /tmp/layer2_report.json"
-          fi
-          python scripts/final_decision.py             --review-id ${{ env.REVIEW_ID }}             --layer1-report /tmp/layer1_report.json             $L2             --pr-number ${{ env.PR_NUMBER }}             --repo-url ${{ env.REPO_URL }}             --github-token ${{ secrets.GITHUB_TOKEN }} || true
+          L2=''
+          if [ -f /tmp/layer2_report.json ]; then L2='--layer2-report /tmp/layer2_report.json'; fi
+          python scripts/final_decision.py \
+            --review-id ${{ env.REVIEW_ID }} \
+            --layer1-report /tmp/layer1_report.json \
+            $L2 \
+            --pr-number ${{ env.PR_NUMBER }} \
+            --repo-url ${{ env.REPO_URL }} \
+            --github-token ${{ secrets.GITHUB_TOKEN }} || true
