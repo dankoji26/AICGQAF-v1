@@ -20,8 +20,9 @@ permissions:
 
 env:
   REVIEW_ID: ${{ github.run_id }}-${{ github.event.pull_request.number }}
-  PR_NUMBER: ${{ github.event.pull_request.number }}
+  PR_NUM: ${{ github.event.pull_request.number }}
   REPO_URL: ${{ github.event.repository.html_url }}
+  LANGUAGE: ${{ needs.detect-language.outputs.language }}
 
 jobs:
 
@@ -35,25 +36,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Detect primary language
+      - name: Detect language
         id: detect
         run: |
           PY=$(find . -name '*.py' ! -path './.git/*' | wc -l)
           JS=$(find . -name '*.js' ! -path './.git/*' | wc -l)
           JV=$(find . -name '*.java' ! -path './.git/*' | wc -l)
           CS=$(find . -name '*.cs' ! -path './.git/*' | wc -l)
-          if [ "$PY" -ge "$JS" ] && [ "$PY" -ge "$JV" ] && [ "$PY" -ge "$CS" ]; then
-            LANG=python
-          elif [ "$JS" -ge "$JV" ] && [ "$JS" -ge "$CS" ]; then
-            LANG=javascript
-          elif [ "$JV" -ge "$CS" ]; then
-            LANG=java
-          else
-            LANG=csharp
+          if [ $PY -ge $JS ] && [ $PY -ge $JV ] && [ $PY -ge $CS ]; then LANG=python
+          elif [ $JS -ge $JV ] && [ $JS -ge $CS ]; then LANG=javascript
+          elif [ $JV -ge $CS ]; then LANG=java
+          else LANG=csharp
           fi
-          echo "Detected: $LANG"
-          echo "language=$LANG" >> $GITHUB_OUTPUT
+          echo language=$LANG >> $GITHUB_OUTPUT
 
   layer1-static-analysis:
     name: Layer 1 Static Analysis
@@ -80,19 +75,17 @@ jobs:
       - name: Install dependencies
         run: pip install boto3 requests bandit --quiet
 
-      - name: Run Bandit scan
+      - name: Run Bandit
         if: needs.detect-language.outputs.language == 'python'
         run: bandit -r . --exclude .git -f json -o /tmp/bandit.json -q || true
 
-      - name: Generate PR diff
-        run: |
-          git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > /tmp/pr.diff
-          echo "Diff lines $(wc -l < /tmp/pr.diff)"
+      - name: Generate diff
+        run: git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > /tmp/pr.diff
 
       - name: Upload diff to S3
         run: aws s3 cp /tmp/pr.diff s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/pr.diff
 
-      - name: Run Layer 1 script
+      - name: Run Layer 1
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
@@ -100,64 +93,54 @@ jobs:
           SQS_QUEUE_URL: ${{ secrets.SQS_QUEUE_URL }}
           SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
           AWS_REGION_NAME: ${{ secrets.AWS_REGION }}
+          PR_NUMBER: ${{ env.PR_NUM }}
+          LANG: ${{ needs.detect-language.outputs.language }}
+          RID: ${{ env.REVIEW_ID }}
         run: |
-          python scripts/layer1_static_analysis.py \
-            --pr-number ${{ env.PR_NUMBER }} \
-            --repo-url ${{ env.REPO_URL }} \
-            --repo-path . \
-            --language ${{ needs.detect-language.outputs.language }} \
-            --review-id ${{ env.REVIEW_ID }} \
-            --diff-path /tmp/pr.diff \
-            --output /tmp/layer1_report.json || true
+          python scripts/layer1_static_analysis.py --pr-number $PR_NUMBER --repo-url ${{ env.REPO_URL }} --repo-path . --language $LANG --review-id $RID --diff-path /tmp/pr.diff --output /tmp/layer1_report.json || true
           if [ ! -f /tmp/layer1_report.json ]; then
-            python3 -c "
-import json
-r={'review_id':'${{ env.REVIEW_ID }}','pr_number':${{ env.PR_NUMBER }},'language':'${{ needs.detect-language.outputs.language }}','issues_critical':0,'issues_high':0,'issues_medium':0,'issues_low':0,'code_smell_percent':5.0,'maintainability_index':75,'technical_debt_hours':0.5,'cyclomatic_complexity':5.0,'cwe_violations':[],'owasp_flags':[],'bandit_findings':[],'layer1_decision':'ESCALATE','escalation_reason':'ESCALATE: Forwarded to AI review','confidence':95,'layer':1}
-json.dump(r,open('/tmp/layer1_report.json','w'),indent=2)
-print('Report created')
-"
+            echo '{"review_id":"'$RID'","pr_number":'$PR_NUMBER',"language":"'$LANG'","issues_critical":0,"issues_high":0,"issues_medium":0,"issues_low":0,"code_smell_percent":5.0,"maintainability_index":75,"technical_debt_hours":0.5,"cyclomatic_complexity":5.0,"cwe_violations":[],"owasp_flags":[],"bandit_findings":[],"layer1_decision":"ESCALATE","escalation_reason":"ESCALATE: Forwarded to AI review","confidence":95,"layer":1}' > /tmp/layer1_report.json
           fi
           aws s3 cp /tmp/layer1_report.json s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/layer1_report.json
 
-      - name: Evaluate Gate 1
+      - name: Gate 1 decision
         id: gate1
         run: |
-          D=$(python3 -c "import json; r=json.load(open('/tmp/layer1_report.json')); print(r.get('layer1_decision','ESCALATE'))")
-          echo "decision=$D" >> $GITHUB_OUTPUT
-          echo "Gate 1: $D"
+          D=$(python3 -c "import json; print(json.load(open('/tmp/layer1_report.json')).get('layer1_decision','ESCALATE'))")
+          echo decision=$D >> $GITHUB_OUTPUT
+          echo Gate1=$D
 
       - uses: actions/upload-artifact@v4
         with:
-          name: layer1-report-${{ env.REVIEW_ID }}
+          name: layer1-${{ env.REVIEW_ID }}
           path: /tmp/layer1_report.json
           retention-days: 30
 
-      - name: Post Layer 1 PR comment
+      - name: Post PR comment Layer 1
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const r = JSON.parse(fs.readFileSync('/tmp/layer1_report.json','utf8'));
-            const d = r.layer1_decision;
-            const cwes = (r.cwe_violations||[]).map(c => '- '+c.cwe_id+' ('+c.severity+'): '+c.description).join('\n') || 'No CWE violations detected.';
+            const cwes = (r.cwe_violations||[]).map(c=>'- '+c.cwe_id+' ('+c.severity+'): '+c.description).join('\n')||'No violations.';
             await github.rest.issues.createComment({
               owner: context.repo.owner, repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
               body: '## AICGQAF v1.0 - Layer 1 Static Analysis\n\n'
-                + '**Decision:** ' + d + '\n'
-                + '**Reason:** ' + r.escalation_reason + '\n\n'
-                + '| Metric | Value |\n|--------|-------|\n'
-                + '| Critical | ' + r.issues_critical + ' |\n'
-                + '| High | ' + r.issues_high + ' |\n'
-                + '| Medium | ' + r.issues_medium + ' |\n'
-                + '| Code Smells | ' + r.code_smell_percent + '% |\n'
-                + '| Maintainability | ' + r.maintainability_index + '/100 |\n\n'
-                + '### CWE Violations\n' + cwes + '\n\n'
-                + '*AICGQAF v1.0 | Koji Dan Seya TP090490*'
+                +'**Decision:** '+r.layer1_decision+'\n'
+                +'**Reason:** '+r.escalation_reason+'\n\n'
+                +'| Metric | Value |\n|---|---|\n'
+                +'| Critical | '+r.issues_critical+' |\n'
+                +'| High | '+r.issues_high+' |\n'
+                +'| Medium | '+r.issues_medium+' |\n'
+                +'| Smells | '+r.code_smell_percent+'% |\n'
+                +'| Maintain | '+r.maintainability_index+'/100 |\n\n'
+                +'### CWE Violations\n'+cwes+'\n\n'
+                +'*AICGQAF v1.0 | Koji Dan Seya TP090490*'
             });
 
-      - name: Fail if Gate 1 FAIL
+      - name: Fail if FAIL
         if: steps.gate1.outputs.decision == 'FAIL'
         run: exit 1
 
@@ -189,15 +172,14 @@ print('Report created')
 
       - uses: actions/download-artifact@v4
         with:
-          name: layer1-report-${{ env.REVIEW_ID }}
+          name: layer1-${{ env.REVIEW_ID }}
           path: /tmp
 
-      - name: Get PR diff
+      - name: Get diff
         run: |
-          aws s3 cp s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/pr.diff /tmp/pr.diff || \
-          git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > /tmp/pr.diff
+          aws s3 cp s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/pr.diff /tmp/pr.diff || git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > /tmp/pr.diff
 
-      - name: Run Layer 2 script
+      - name: Run Layer 2
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
@@ -205,52 +187,48 @@ print('Report created')
           SQS_QUEUE_URL: ${{ secrets.SQS_QUEUE_URL }}
           SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
           AWS_REGION_NAME: ${{ secrets.AWS_REGION }}
+          LANG: ${{ needs.detect-language.outputs.language }}
+          RID: ${{ env.REVIEW_ID }}
         run: |
-          python scripts/layer2_ai_review.py \
-            --review-id ${{ env.REVIEW_ID }} \
-            --layer1-report /tmp/layer1_report.json \
-            --repo-path . \
-            --pr-diff /tmp/pr.diff \
-            --language ${{ needs.detect-language.outputs.language }} \
-            --output /tmp/layer2_report.json || true
+          python scripts/layer2_ai_review.py --review-id $RID --layer1-report /tmp/layer1_report.json --repo-path . --pr-diff /tmp/pr.diff --language $LANG --output /tmp/layer2_report.json || true
           if [ ! -f /tmp/layer2_report.json ]; then
-            python3 -c "import json; json.dump({'semantic_correct':True,'architectural_fit':True,'security_concerns':[],'maintainability_score':70,'performance_flags':[],'overall_confidence':35,'recommendation':'REVIEW_HUMAN','explanation':'Layer 2 complete.','gate2_decision':'ESCALATE','gate2_reason':'Confidence below threshold.','layer':2},open('/tmp/layer2_report.json','w'),indent=2)"
+            echo '{"semantic_correct":true,"architectural_fit":true,"security_concerns":[],"maintainability_score":70,"performance_flags":[],"overall_confidence":35,"recommendation":"REVIEW_HUMAN","explanation":"Layer 2 complete.","gate2_decision":"ESCALATE","gate2_reason":"Confidence below threshold.","layer":2}' > /tmp/layer2_report.json
           fi
           aws s3 cp /tmp/layer2_report.json s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/layer2_report.json
 
-      - name: Evaluate Gate 2
+      - name: Gate 2 decision
         id: gate2
         run: |
-          D=$(python3 -c "import json; r=json.load(open('/tmp/layer2_report.json')); print(r.get('gate2_decision','ESCALATE'))")
-          echo "decision=$D" >> $GITHUB_OUTPUT
-          echo "Gate 2: $D"
+          D=$(python3 -c "import json; print(json.load(open('/tmp/layer2_report.json')).get('gate2_decision','ESCALATE'))")
+          echo decision=$D >> $GITHUB_OUTPUT
+          echo Gate2=$D
 
       - uses: actions/upload-artifact@v4
         with:
-          name: layer2-report-${{ env.REVIEW_ID }}
+          name: layer2-${{ env.REVIEW_ID }}
           path: /tmp/layer2_report.json
           retention-days: 30
 
-      - name: Post Layer 2 PR comment
+      - name: Post PR comment Layer 2
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const r = JSON.parse(fs.readFileSync('/tmp/layer2_report.json','utf8'));
-            const concerns = (r.security_concerns||[]).map(c => '- '+(c.cwe_id||'?')+': '+(c.description||'')).join('\n') || 'No concerns.';
+            const concerns = (r.security_concerns||[]).map(c=>'- '+(c.cwe_id||'?')+': '+(c.description||'')).join('\n')||'No concerns.';
             await github.rest.issues.createComment({
               owner: context.repo.owner, repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
               body: '## AICGQAF v1.0 - Layer 2 AI Semantic Review\n\n'
-                + '**Decision:** ' + r.gate2_decision + '\n'
-                + '**Confidence:** ' + r.overall_confidence + '%\n\n'
-                + '### Analysis\n' + r.explanation + '\n\n'
-                + '### Security Concerns\n' + concerns + '\n\n'
-                + '*AICGQAF v1.0 | Koji Dan Seya TP090490*'
+                +'**Decision:** '+r.gate2_decision+'\n'
+                +'**Confidence:** '+r.overall_confidence+'%\n\n'
+                +'### Analysis\n'+r.explanation+'\n\n'
+                +'### Security Concerns\n'+concerns+'\n\n'
+                +'*AICGQAF v1.0 | Koji Dan Seya TP090490*'
             });
 
-      - name: Fail if Gate 2 REJECT
+      - name: Fail if REJECT
         if: steps.gate2.outputs.decision == 'REJECT'
         run: exit 1
 
@@ -281,19 +259,19 @@ print('Report created')
 
       - uses: actions/download-artifact@v4
         with:
-          name: layer1-report-${{ env.REVIEW_ID }}
+          name: layer1-${{ env.REVIEW_ID }}
           path: /tmp
         continue-on-error: true
 
-      - name: Download Layer 2 report
+      - name: Download Layer 2
         if: needs.layer2-ai-review.result == 'success'
         uses: actions/download-artifact@v4
         with:
-          name: layer2-report-${{ env.REVIEW_ID }}
+          name: layer2-${{ env.REVIEW_ID }}
           path: /tmp
         continue-on-error: true
 
-      - name: Run final decision script
+      - name: Run final decision
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
@@ -301,13 +279,9 @@ print('Report created')
           SQS_QUEUE_URL: ${{ secrets.SQS_QUEUE_URL }}
           SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
           AWS_REGION_NAME: ${{ secrets.AWS_REGION }}
+          PR_NUMBER: ${{ env.PR_NUM }}
+          RID: ${{ env.REVIEW_ID }}
         run: |
           L2=''
           if [ -f /tmp/layer2_report.json ]; then L2='--layer2-report /tmp/layer2_report.json'; fi
-          python scripts/final_decision.py \
-            --review-id ${{ env.REVIEW_ID }} \
-            --layer1-report /tmp/layer1_report.json \
-            $L2 \
-            --pr-number ${{ env.PR_NUMBER }} \
-            --repo-url ${{ env.REPO_URL }} \
-            --github-token ${{ secrets.GITHUB_TOKEN }} || true
+          python scripts/final_decision.py --review-id $RID --layer1-report /tmp/layer1_report.json $L2 --pr-number $PR_NUMBER --repo-url ${{ env.REPO_URL }} --github-token $GITHUB_TOKEN || true
