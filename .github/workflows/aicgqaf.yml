@@ -76,7 +76,7 @@ jobs:
 
       - name: Run Bandit
         if: needs.detect-language.outputs.language == 'python'
-        run: bandit -r . --exclude .git -f json -o /tmp/bandit.json -q || true
+        run: bandit -r . --exclude .git,test_prs,tests -f json -o /tmp/bandit.json -q || true
 
       - name: Generate diff
         run: git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > /tmp/pr.diff
