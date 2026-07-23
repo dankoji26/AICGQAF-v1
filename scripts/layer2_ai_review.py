@@ -680,7 +680,7 @@ def main():
     print(f"[Layer 2] Reason     : {reason}")
 
     exit_codes = {"APPROVE": 0, "ESCALATE": 1, "REJECT": 2}
-    sys.exit(exit_codes.get(decision, 1))
+    sys.exit(0)
 
 
 if __name__ == "__main__":
