@@ -31,7 +31,7 @@ import requests
 # ─── Configuration ────────────────────────────────────────────────────────────
 ANTHROPIC_API_KEY  = os.getenv("ANTHROPIC_API_KEY", "")
 ANTHROPIC_API_URL  = "https://api.anthropic.com/v1/messages"
-ANTHROPIC_MODEL    = "claude-sonnet-4-20250514"
+ANTHROPIC_MODEL    = "claude-sonnet-4-6"
 S3_BUCKET          = os.getenv("S3_BUCKET",         "aicgqaf-artifacts")
 DYNAMODB_TABLE     = os.getenv("DYNAMODB_TABLE",     "aicgqaf-reviews")
 CACHE_TABLE        = os.getenv("CACHE_TABLE",        "aicgqaf-l2-cache")
@@ -495,7 +495,7 @@ def _log_api_usage(review_id: str, usage: dict, duration_ms: int) -> None:
     """Logs token usage and estimated cost to DynamoDB for cost monitoring."""
     input_tokens  = usage.get("input_tokens",  0)
     output_tokens = usage.get("output_tokens", 0)
-    # Claude claude-sonnet-4-20250514 pricing: $3/M input, $15/M output
+    # Claude claude-sonnet-4-6 pricing: $3/M input, $15/M output
     estimated_cost = (input_tokens / 1_000_000 * 3.0) + (output_tokens / 1_000_000 * 15.0)
 
     print(f"[Layer 2] Tokens: {input_tokens} in / {output_tokens} out | Cost: ${estimated_cost:.4f} | Time: {duration_ms}ms")
