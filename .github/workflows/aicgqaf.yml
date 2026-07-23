@@ -28,7 +28,7 @@ jobs:
   detect-language:
     name: Detect Language
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     outputs:
       language: ${{ steps.detect.outputs.language }}
     steps:
@@ -230,7 +230,7 @@ jobs:
       always() &&
       needs.layer1-static-analysis.result != 'failure' &&
       (needs.layer2-ai-review.result == 'success' || needs.layer2-ai-review.result == 'skipped')
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
