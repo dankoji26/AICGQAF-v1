@@ -76,13 +76,13 @@ jobs:
 
       - name: Run Bandit
         if: needs.detect-language.outputs.language == 'python'
-        run: bandit -r . --exclude .git,test_prs,tests -f json -o /tmp/bandit.json -q || true
+        run: bandit -r . --exclude .git -f json -o /tmp/bandit.json -q || true
 
       - name: Generate diff
         run: git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > /tmp/pr.diff
 
       - name: Upload diff to S3
-        run: aws s3 cp /tmp/pr.diff s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/pr.diff
+        run: aws s3 cp /tmp/pr.diff s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/pr.diff || true
 
       - name: Run Layer 1
         env:
@@ -99,7 +99,7 @@ jobs:
           if [ ! -f /tmp/layer1_report.json ]; then
             echo '{"review_id":"'$RID'","pr_number":${{ env.PR_NUM }},"language":"'$LANG'","issues_critical":0,"issues_high":0,"issues_medium":0,"issues_low":0,"code_smell_percent":5.0,"maintainability_index":75,"technical_debt_hours":0.5,"cyclomatic_complexity":5.0,"cwe_violations":[],"owasp_flags":[],"bandit_findings":[],"layer1_decision":"ESCALATE","escalation_reason":"ESCALATE: Forwarded to AI review","confidence":95,"layer":1}' > /tmp/layer1_report.json
           fi
-          aws s3 cp /tmp/layer1_report.json s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/layer1_report.json
+          aws s3 cp /tmp/layer1_report.json s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/layer1_report.json || true
 
       - name: Gate 1 decision
         id: gate1
@@ -191,7 +191,7 @@ jobs:
           if [ ! -f /tmp/layer2_report.json ]; then
             echo '{"semantic_correct":true,"architectural_fit":true,"security_concerns":[],"maintainability_score":70,"performance_flags":[],"overall_confidence":35,"recommendation":"REVIEW_HUMAN","explanation":"Layer 2 complete.","gate2_decision":"ESCALATE","gate2_reason":"Confidence below threshold.","layer":2}' > /tmp/layer2_report.json
           fi
-          aws s3 cp /tmp/layer2_report.json s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/layer2_report.json
+          aws s3 cp /tmp/layer2_report.json s3://${{ secrets.S3_BUCKET }}/reviews/${{ env.REVIEW_ID }}/layer2_report.json || true
 
       - name: Gate 2 decision
         id: gate2
