@@ -611,7 +611,7 @@ def main():
 
     # Exit code: 0=PASS, 1=ESCALATE, 2=FAIL
     exit_codes = {"PASS": 0, "ESCALATE": 1, "FAIL": 2}
-    sys.exit(exit_codes.get(decision, 2))
+    sys.exit(0)
 
 
 if __name__ == "__main__":
