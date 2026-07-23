@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AICGQAF — Human Review Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+/* ── RESET & TOKENS ──────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:      #0a0f1e;
+  --navy2:     #0d1526;
+  --navy3:     #111e35;
+  --panel:     #131f38;
+  --panel2:    #162340;
+  --border:    rgba(100,180,255,0.12);
+  --border2:   rgba(100,180,255,0.22);
+  --blue:      #2a8cff;
+  --blue2:     #4ca3ff;
+  --cyan:      #00d4ff;
+  --green:     #00e676;
+  --green2:    #00c853;
+  --amber:     #ffab00;
+  --amber2:    #ffd740;
+  --red:       #ff3d3d;
+  --red2:      #ff6b6b;
+  --purple:    #b388ff;
+  --text:      #e8f0fe;
+  --text2:     #90a8c8;
+  --text3:     #5a7090;
+  --mono:      'JetBrains Mono', monospace;
+  --sans:      'Syne', sans-serif;
+  --glow-blue: 0 0 20px rgba(42,140,255,0.3);
+  --glow-green:0 0 20px rgba(0,230,118,0.3);
+  --glow-red:  0 0 20px rgba(255,61,61,0.3);
+  --glow-amber:0 0 20px rgba(255,171,0,0.3);
+}
+
+html { font-size: 14px; }
+body {
+  background: var(--navy);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SCANLINE OVERLAY ────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+  );
+}
+
+/* ── HEADER ──────────────────────────────────────────── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,15,30,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border2);
+  padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px;
+}
+
+.logo {
+  display: flex; align-items: center; gap: 12px;
+}
+.logo-badge {
+  width: 32px; height: 32px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--sans); font-weight: 800; font-size: 13px; color: #fff;
+  box-shadow: var(--glow-blue);
+}
+.logo-text { font-family: var(--sans); font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
+.logo-sub  { font-size: 10px; color: var(--text3); letter-spacing: 1px; margin-top: 1px; }
+
+.header-meta {
+  display: flex; align-items: center; gap: 24px;
+}
+.sla-clock {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 20px;
+  border: 1px solid rgba(255,171,0,0.4);
+  background: rgba(255,171,0,0.08);
+}
+.sla-label { font-size: 10px; color: var(--amber); letter-spacing: 1px; text-transform: uppercase; }
+.sla-time  { font-size: 18px; font-weight: 700; color: var(--amber2); letter-spacing: 2px; font-variant-numeric: tabular-nums; }
+.sla-time.urgent { color: var(--red2); animation: pulse 1s infinite; }
+
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+.reviewer-badge {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--panel);
+  font-size: 11px;
+}
+.reviewer-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: var(--glow-green); }
+.reviewer-role { color: var(--green); font-weight: 600; letter-spacing: 0.5px; }
+
+/* ── MAIN LAYOUT ─────────────────────────────────────── */
+main {
+  position: relative; z-index: 1;
+  max-width: 1400px; margin: 0 auto;
+  padding: 28px 32px;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 20px;
+}
+
+/* ── PR SUMMARY BAR ──────────────────────────────────── */
+.pr-summary {
+  grid-column: 1 / -1;
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 20px 28px;
+  display: flex; align-items: center; gap: 24px;
+  position: relative; overflow: hidden;
+}
+.pr-summary::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, var(--amber), var(--blue));
+}
+.pr-num {
+  font-family: var(--sans); font-size: 32px; font-weight: 800;
+  color: var(--blue2); line-height: 1;
+}
+.pr-num span { font-size: 14px; color: var(--text3); font-family: var(--mono); font-weight: 400; }
+.pr-divider { width: 1px; height: 48px; background: var(--border2); }
+.pr-info { flex: 1; }
+.pr-title { font-family: var(--sans); font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.pr-meta  { font-size: 11px; color: var(--text2); display: flex; gap: 20px; }
+.pr-meta span { display: flex; align-items: center; gap: 5px; }
+.pr-meta .dot { color: var(--text3); }
+
+.status-pill {
+  padding: 8px 20px; border-radius: 24px; font-size: 11px;
+  font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.status-pill.awaiting {
+  background: rgba(255,171,0,0.12);
+  border: 1px solid rgba(255,171,0,0.5);
+  color: var(--amber2);
+}
+.status-pill .blink {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--amber); box-shadow: var(--glow-amber);
+  animation: blink 1.4s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.3;transform:scale(0.8);} }
+
+/* ── SECTION TITLES ──────────────────────────────────── */
+.section-title {
+  font-family: var(--sans); font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* ── PANEL BASE ──────────────────────────────────────── */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px 24px;
+}
+.panel.highlight { border-color: var(--border2); }
+
+/* ── ANALYSIS PANELS ─────────────────────────────────── */
+.analysis-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+}
+
+/* ── METRIC ROWS ─────────────────────────────────────── */
+.metric-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label { color: var(--text2); }
+.metric-value {
+  font-weight: 600; font-family: var(--mono); font-size: 13px;
+  padding: 2px 10px; border-radius: 4px;
+}
+.mv-good    { color: var(--green);  background: rgba(0,230,118,0.08); }
+.mv-warn    { color: var(--amber);  background: rgba(255,171,0,0.08); }
+.mv-bad     { color: var(--red2);   background: rgba(255,61,61,0.1); }
+.mv-neutral { color: var(--blue2);  background: rgba(42,140,255,0.08); }
+
+/* ── GAUGE BARS ──────────────────────────────────────── */
+.gauge-wrap { margin: 4px 0 10px; }
+.gauge-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 5px; }
+.gauge-track {
+  height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06);
+  overflow: hidden; position: relative;
+}
+.gauge-fill {
+  height: 100%; border-radius: 3px;
+  transition: width 1.2s cubic-bezier(.16,1,.3,1);
+}
+.gf-green  { background: linear-gradient(90deg, var(--green2), var(--green)); box-shadow: var(--glow-green); }
+.gf-amber  { background: linear-gradient(90deg, var(--amber), var(--amber2)); box-shadow: var(--glow-amber); }
+.gf-red    { background: linear-gradient(90deg, var(--red), var(--red2)); box-shadow: var(--glow-red); }
+.gf-blue   { background: linear-gradient(90deg, var(--blue), var(--cyan)); box-shadow: var(--glow-blue); }
+
+/* ── CWE TAGS ────────────────────────────────────────── */
+.tag-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.cwe-tag {
+  padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.5px; border: 1px solid;
+  display: flex; align-items: center; gap: 5px; cursor: default;
+  transition: transform 0.2s;
+}
+.cwe-tag:hover { transform: translateY(-1px); }
+.cwe-critical { color: var(--red2);  background: rgba(255,61,61,0.1);  border-color: rgba(255,61,61,0.4); }
+.cwe-high     { color: #ff8a65;      background: rgba(255,138,101,0.1);border-color: rgba(255,138,101,0.4); }
+.cwe-medium   { color: var(--amber); background: rgba(255,171,0,0.1);  border-color: rgba(255,171,0,0.4); }
+.cwe-low      { color: var(--blue2); background: rgba(42,140,255,0.08);border-color: rgba(42,140,255,0.3); }
+
+/* ── AI ANALYSIS PANEL ───────────────────────────────── */
+.ai-card {
+  background: linear-gradient(135deg, rgba(42,140,255,0.05), rgba(0,212,255,0.03));
+  border: 1px solid rgba(42,140,255,0.2);
+  border-radius: 10px; padding: 16px 18px; margin-top: 12px;
+}
+.ai-label {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--cyan); font-weight: 600; margin-bottom: 8px;
+}
+.ai-text { font-size: 12px; color: var(--text2); line-height: 1.7; }
+
+.confidence-ring {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 100%; margin: 14px 0;
+}
+.confidence-number {
+  font-family: var(--sans); font-size: 48px; font-weight: 800;
+  line-height: 1; letter-spacing: -2px;
+}
+.confidence-pct { font-size: 20px; font-weight: 400; opacity: 0.7; }
+.confidence-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); margin-top: 4px; }
+
+.verdict-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;
+}
+.verdict-item {
+  padding: 10px 12px; border-radius: 8px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px;
+}
+.verdict-icon { font-size: 16px; }
+.verdict-text { flex: 1; }
+.verdict-text strong { display: block; font-weight: 600; margin-bottom: 1px; }
+.verdict-text span { color: var(--text3); font-size: 10px; }
+.v-pass { background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.2); }
+.v-fail { background: rgba(255,61,61,0.08); border: 1px solid rgba(255,61,61,0.2); }
+.v-warn { background: rgba(255,171,0,0.08); border: 1px solid rgba(255,171,0,0.2); }
+
+/* ── ESCALATION REASON ───────────────────────────────── */
+.escalation-box {
+  background: rgba(255,171,0,0.06);
+  border: 1px solid rgba(255,171,0,0.25);
+  border-left: 3px solid var(--amber);
+  border-radius: 8px; padding: 14px 16px;
+  font-size: 12px; color: var(--amber2); line-height: 1.6;
+  margin-top: 14px;
+}
+.escalation-box .esc-label {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--amber); margin-bottom: 6px; font-weight: 600;
+}
+
+/* ── CHECKLIST ───────────────────────────────────────── */
+.checklist { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.check-item {
+  display: flex; align-items: flex-start; gap: 12px; cursor: pointer;
+  padding: 10px 14px; border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: all 0.2s; user-select: none;
+}
+.check-item:hover { border-color: var(--border2); background: rgba(255,255,255,0.02); }
+.check-item.checked {
+  border-color: rgba(0,230,118,0.3);
+  background: rgba(0,230,118,0.05);
+}
+.check-box {
+  width: 18px; height: 18px; min-width: 18px; border-radius: 4px; margin-top: 1px;
+  border: 2px solid var(--text3);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.check-item.checked .check-box {
+  background: var(--green); border-color: var(--green);
+  box-shadow: var(--glow-green);
+}
+.check-mark { color: #fff; font-size: 11px; font-weight: 700; opacity: 0; transition: opacity 0.2s; }
+.check-item.checked .check-mark { opacity: 1; }
+.check-text { font-size: 12px; line-height: 1.5; color: var(--text2); flex: 1; }
+.check-item.checked .check-text { color: var(--text); }
+
+.checklist-progress {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  font-size: 11px; color: var(--text3);
+}
+.checklist-progress .count { font-weight: 700; color: var(--green); }
+
+/* ── DECISION PANEL ──────────────────────────────────── */
+.decision-panel {
+  grid-column: 2;
+  grid-row: 2 / 5;
+  display: flex; flex-direction: column; gap: 20px;
+  position: sticky; top: 76px;
+  align-self: start;
+}
+
+.comment-area {
+  width: 100%;
+  background: var(--navy2);
+  border: 1px solid var(--border2);
+  border-radius: 8px; padding: 12px 14px;
+  color: var(--text); font-family: var(--mono); font-size: 12px;
+  resize: vertical; min-height: 100px;
+  outline: none; transition: border-color 0.2s;
+  line-height: 1.6;
+}
+.comment-area:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(42,140,255,0.15); }
+.comment-area::placeholder { color: var(--text3); }
+
+.char-counter {
+  text-align: right; font-size: 10px; color: var(--text3); margin-top: 4px;
+}
+.char-counter.ok  { color: var(--green); }
+.char-counter.bad { color: var(--red2); }
+
+.fix-area {
+  width: 100%;
+  background: var(--navy2);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+  color: var(--cyan); font-family: var(--mono); font-size: 11px;
+  resize: vertical; min-height: 70px;
+  outline: none; transition: border-color 0.2s;
+  line-height: 1.7;
+}
+.fix-area:focus { border-color: rgba(0,212,255,0.4); }
+.fix-area::placeholder { color: var(--text3); }
+
+.decision-buttons {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.btn {
+  width: 100%; padding: 14px 20px; border-radius: 10px;
+  border: none; cursor: pointer; font-family: var(--mono);
+  font-size: 13px; font-weight: 600; letter-spacing: 1px;
+  transition: all 0.2s; display: flex; align-items: center;
+  justify-content: center; gap: 10px; text-transform: uppercase;
+  position: relative; overflow: hidden;
+}
+.btn:disabled {
+  opacity: 0.35; cursor: not-allowed; transform: none !important;
+  box-shadow: none !important;
+}
+.btn:not(:disabled):hover { transform: translateY(-2px); }
+.btn:not(:disabled):active { transform: translateY(0); }
+
+.btn-approve {
+  background: linear-gradient(135deg, #00a550, var(--green2));
+  color: #fff; box-shadow: 0 4px 20px rgba(0,200,83,0.25);
+}
+.btn-approve:not(:disabled):hover { box-shadow: 0 6px 28px rgba(0,200,83,0.45); }
+
+.btn-changes {
+  background: linear-gradient(135deg, #e65c00, var(--amber));
+  color: #fff; box-shadow: 0 4px 20px rgba(255,171,0,0.2);
+}
+.btn-changes:not(:disabled):hover { box-shadow: 0 6px 28px rgba(255,171,0,0.4); }
+
+.btn-reject {
+  background: linear-gradient(135deg, #b71c1c, var(--red));
+  color: #fff; box-shadow: 0 4px 20px rgba(255,61,61,0.2);
+}
+.btn-reject:not(:disabled):hover { box-shadow: 0 6px 28px rgba(255,61,61,0.4); }
+
+.btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  pointer-events: none;
+}
+
+/* ── OVERRIDE WARNING ────────────────────────────────── */
+.override-warn {
+  background: rgba(179,136,255,0.08);
+  border: 1px solid rgba(179,136,255,0.3);
+  border-radius: 8px; padding: 12px 14px;
+  font-size: 11px; color: var(--purple); line-height: 1.6;
+  display: none;
+}
+.override-warn.visible { display: block; }
+
+/* ── DECISION CONFIRMATION OVERLAY ──────────────────── */
+.overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(5,10,20,0.85); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.overlay.active { opacity: 1; pointer-events: all; }
+
+.confirm-card {
+  background: var(--panel2); border: 1px solid var(--border2);
+  border-radius: 16px; padding: 36px; max-width: 440px; width: 90%;
+  text-align: center;
+  transform: scale(0.9) translateY(20px); transition: transform 0.3s;
+}
+.overlay.active .confirm-card { transform: scale(1) translateY(0); }
+.confirm-icon { font-size: 52px; margin-bottom: 20px; }
+.confirm-title { font-family: var(--sans); font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+.confirm-text  { font-size: 12px; color: var(--text2); line-height: 1.7; margin-bottom: 28px; }
+.confirm-buttons { display: flex; gap: 12px; }
+.btn-confirm-yes, .btn-confirm-no {
+  flex: 1; padding: 12px; border-radius: 8px;
+  border: none; cursor: pointer; font-family: var(--mono);
+  font-size: 12px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; transition: all 0.2s;
+}
+.btn-confirm-yes { background: var(--blue); color: #fff; }
+.btn-confirm-yes:hover { background: var(--blue2); transform: translateY(-1px); }
+.btn-confirm-no  { background: var(--panel); color: var(--text2); border: 1px solid var(--border2); }
+.btn-confirm-no:hover { background: var(--panel2); }
+
+/* ── SUCCESS STATE ───────────────────────────────────── */
+.success-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(5,10,20,0.9); backdrop-filter: blur(12px);
+  opacity: 0; pointer-events: none; transition: opacity 0.4s;
+}
+.success-overlay.active { opacity: 1; pointer-events: all; }
+.success-card {
+  text-align: center; padding: 48px;
+}
+.success-emoji { font-size: 72px; display: block; margin-bottom: 24px; animation: pop 0.5s cubic-bezier(.16,1.5,.3,1); }
+@keyframes pop { from{transform:scale(0);} to{transform:scale(1);} }
+.success-title { font-family: var(--sans); font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+.success-sub   { font-size: 13px; color: var(--text2); }
+
+/* ── SCROLLBAR ───────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--navy2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── RESPONSIVE ──────────────────────────────────────── */
+@media (max-width: 1100px) {
+  main { grid-template-columns: 1fr; }
+  .decision-panel { grid-column: 1; grid-row: auto; position: static; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-badge">AI</div>
+    <div>
+      <div class="logo-text">AICGQAF v1.0</div>
+      <div class="logo-sub">Human Review Dashboard — Layer 3</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="sla-clock">
+      <span class="sla-label">SLA</span>
+      <span class="sla-time" id="slaTimer">09:47</span>
+    </div>
+    <div class="reviewer-badge">
+      <span class="reviewer-dot"></span>
+      <span class="reviewer-role" id="reviewerRole">Security Expert</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── MAIN ────────────────────────────────────────────── -->
+<main>
+
+  <!-- PR SUMMARY BAR -->
+  <div class="pr-summary">
+    <div class="pr-num"><span>PR</span> #2304</div>
+    <div class="pr-divider"></div>
+    <div class="pr-info">
+      <div class="pr-title">feat: add user profile endpoint with JWT validation</div>
+      <div class="pr-meta">
+        <span>👤 KojiDanSeya.tp090490.com</span>
+        <span class="dot">·</span>
+        <span>📁 3 files changed</span>
+        <span class="dot">·</span>
+        <span>➕ 156 lines added</span>
+        <span class="dot">·</span>
+        <span>🌿 feature/user-profile → main</span>
+        <span class="dot">·</span>
+        <span>🔍 Review ID: aicgqaf-7a3f91c2</span>
+      </div>
+    </div>
+    <div class="status-pill awaiting">
+      <span class="blink"></span>
+      Awaiting Review
+    </div>
+  </div>
+
+  <!-- LEFT COLUMN -->
+  <div style="display:flex;flex-direction:column;gap:20px;">
+
+    <!-- LAYER 1 METRICS -->
+    <div class="panel highlight">
+      <div class="section-title">Layer 1 — Static Analysis Results</div>
+      <div class="analysis-grid">
+        <div>
+          <div class="metric-row">
+            <span class="metric-label">Critical Issues</span>
+            <span class="metric-value mv-good">0</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">High Issues</span>
+            <span class="metric-value mv-good">0</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Medium Issues</span>
+            <span class="metric-value mv-warn">2</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Code Smell %</span>
+            <span class="metric-value mv-warn">13.4%</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Technical Debt</span>
+            <span class="metric-value mv-warn">2.3 hrs</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Layer 1 Decision</span>
+            <span class="metric-value mv-warn">ESCALATE</span>
+          </div>
+        </div>
+        <div>
+          <div class="gauge-wrap">
+            <div class="gauge-label"><span>Maintainability Index</span><span style="color:var(--amber)">64 / 100</span></div>
+            <div class="gauge-track"><div class="gauge-fill gf-amber" style="width:64%"></div></div>
+          </div>
+          <div class="gauge-wrap">
+            <div class="gauge-label"><span>Cyclomatic Complexity</span><span style="color:var(--amber)">11.2 avg</span></div>
+            <div class="gauge-track"><div class="gauge-fill gf-amber" style="width:75%"></div></div>
+          </div>
+          <div class="gauge-wrap">
+            <div class="gauge-label"><span>Code Coverage</span><span style="color:var(--blue2)">68%</span></div>
+            <div class="gauge-track"><div class="gauge-fill gf-blue" style="width:68%"></div></div>
+          </div>
+          <div style="margin-top:14px;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:1px;">CWE FLAGS DETECTED</div>
+            <div class="tag-row">
+              <span class="cwe-tag cwe-medium">⚠ CWE-20</span>
+              <span class="cwe-tag cwe-medium">⚠ CWE-200</span>
+              <span class="cwe-tag cwe-low">ℹ CWE-352</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="escalation-box">
+        <div class="esc-label">Escalation Reason</div>
+        ESCALATE: 2 MEDIUM severity issues found; Code smell percentage 13.4% above escalation threshold 10%; Cyclomatic complexity 11.2 exceeds threshold 10; Potential CWEs requiring semantic review: CWE-20, CWE-200
+      </div>
+    </div>
+
+    <!-- LAYER 2 AI ANALYSIS -->
+    <div class="panel highlight">
+      <div class="section-title">Layer 2 — AI Semantic Review</div>
+      <div class="analysis-grid">
+
+        <div>
+          <div class="confidence-ring">
+            <div class="confidence-number" style="color:var(--amber)">
+              68<span class="confidence-pct">%</span>
+            </div>
+            <div class="confidence-label">AI Confidence</div>
+          </div>
+          <div class="gauge-wrap" style="margin-top:4px">
+            <div class="gauge-label"><span>Confidence Score</span><span style="color:var(--amber)">68 / 100</span></div>
+            <div class="gauge-track" style="height:8px"><div class="gauge-fill gf-amber" style="width:68%"></div></div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:6px;">
+            Below 70% approval threshold → escalated
+          </div>
+        </div>
+
+        <div>
+          <div class="verdict-row">
+            <div class="verdict-item v-pass">
+              <span class="verdict-icon">✅</span>
+              <div class="verdict-text">
+                <strong style="color:var(--green)">Semantic</strong>
+                <span>Correct</span>
+              </div>
+            </div>
+            <div class="verdict-item v-warn">
+              <span class="verdict-icon">⚠️</span>
+              <div class="verdict-text">
+                <strong style="color:var(--amber)">Architecture</strong>
+                <span>Minor deviation</span>
+              </div>
+            </div>
+            <div class="verdict-item v-warn">
+              <span class="verdict-icon">🔒</span>
+              <div class="verdict-text">
+                <strong style="color:var(--amber)">Security</strong>
+                <span>2 MEDIUM found</span>
+              </div>
+            </div>
+            <div class="verdict-item v-warn">
+              <span class="verdict-icon">📐</span>
+              <div class="verdict-text">
+                <strong style="color:var(--amber)">Maintain.</strong>
+                <span>Score: 61</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:1px;">AI-DETECTED SECURITY CONCERNS</div>
+            <div class="tag-row">
+              <span class="cwe-tag cwe-medium">⚠ CWE-20 · Input Validation</span>
+              <span class="cwe-tag cwe-medium">⚠ CWE-639 · IDOR Risk</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-card">
+        <div class="ai-label">AI Reviewer Explanation (Claude claude-sonnet-4-20250514)</div>
+        <div class="ai-text">
+          The getUserProfile() function correctly retrieves user data and the JWT validation logic is semantically sound.
+          However, the <code style="color:var(--cyan);background:rgba(0,212,255,0.08);padding:1px 5px;border-radius:3px;">user_id</code>
+          parameter is not validated before use — a missing <code style="color:var(--cyan);background:rgba(0,212,255,0.08);padding:1px 5px;border-radius:3px;">isValidUserID()</code>
+          check could allow an authenticated user to access another user's profile (IDOR — CWE-639).
+          Additionally, the response includes the full user object including <code style="color:var(--cyan);background:rgba(0,212,255,0.08);padding:1px 5px;border-radius:3px;">password_hash</code>
+          and <code style="color:var(--cyan);background:rgba(0,212,255,0.08);padding:1px 5px;border-radius:3px;">internal_id</code>
+          fields which should be excluded (CWE-200). Confidence is 68% due to incomplete visibility into the auth middleware context.
+        </div>
+      </div>
+
+      <div class="escalation-box" style="margin-top:12px;border-left-color:var(--blue);border-color:rgba(42,140,255,0.25);background:rgba(42,140,255,0.04);">
+        <div class="esc-label" style="color:var(--blue2)">Gate 2 Escalation Reason</div>
+        <span style="color:var(--text2)">AI confidence 68% below approval threshold 70%; MEDIUM security concerns requiring human validation: CWE-20, CWE-639.</span>
+      </div>
+    </div>
+
+    <!-- REVIEW CHECKLIST -->
+    <div class="panel highlight">
+      <div class="section-title">Review Checklist</div>
+      <div class="checklist-progress">
+        <span>Progress:</span>
+        <span class="count" id="checkCount">0 / 5</span>
+        <span>items verified</span>
+      </div>
+      <div class="checklist" id="checklist">
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-mark">✓</span></div>
+          <div class="check-text">I have reviewed all flagged security concerns (CWE-20, CWE-639) and verified their severity in the context of this codebase.</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-mark">✓</span></div>
+          <div class="check-text">I have verified whether the <code style="color:var(--cyan)">user_id</code> parameter is properly validated by upstream middleware before reaching this function.</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-mark">✓</span></div>
+          <div class="check-text">I have confirmed that no sensitive fields (password_hash, internal_id, PII) are exposed in the API response object.</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-mark">✓</span></div>
+          <div class="check-text">I have reviewed the JWT validation logic and confirmed that authentication cannot be bypassed for this endpoint.</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-mark">✓</span></div>
+          <div class="check-text">I understand the business context of this change and my decision reflects both technical and organisational considerations.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /LEFT COLUMN -->
+
+  <!-- DECISION PANEL (RIGHT STICKY) -->
+  <div class="decision-panel">
+
+    <div class="panel highlight">
+      <div class="section-title">Decision</div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">
+          Review Comment <span style="color:var(--red2)">*</span>
+        </label>
+        <textarea
+          class="comment-area"
+          id="reviewComment"
+          placeholder="Provide your assessment. Minimum 20 characters required before submitting…"
+          oninput="updateCharCount()"
+        ></textarea>
+        <div class="char-counter bad" id="charCounter">0 / 20 minimum</div>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">
+          Suggested Fix <span style="color:var(--text3)">(optional)</span>
+        </label>
+        <textarea
+          class="fix-area"
+          id="suggestedFix"
+          placeholder="// Paste suggested code fix here&#10;if (!isValidUserID(req.params.user_id)) {&#10;  return res.status(400).json({ error: 'Invalid user ID' });&#10;}"
+        ></textarea>
+      </div>
+
+      <div class="override-warn" id="overrideWarn">
+        ⚠ Override detected — your decision contradicts the AI Layer 2 recommendation (REVIEW_HUMAN → You are approving). A mandatory justification will be logged.
+      </div>
+
+      <div class="decision-buttons" style="margin-top:14px;">
+        <button class="btn btn-approve" id="btnApprove" disabled onclick="submitDecision('APPROVE','✅','Approved','This pull request has been approved and is ready to merge.')">
+          ✅ &nbsp;Approve
+        </button>
+        <button class="btn btn-changes" id="btnChanges" disabled onclick="submitDecision('REQUEST_CHANGES','🔄','Changes Requested','Developer has been notified with your feedback.')">
+          🔄 &nbsp;Request Changes
+        </button>
+        <button class="btn btn-reject" id="btnReject" disabled onclick="submitDecision('REJECT','❌','Rejected','This pull request has been rejected. Developer must open a new PR.')">
+          ❌ &nbsp;Reject
+        </button>
+      </div>
+
+      <div style="margin-top:14px;font-size:10px;color:var(--text3);line-height:1.6;border-top:1px solid var(--border);padding-top:12px;">
+        All decisions are logged to DynamoDB with reviewer ID, timestamp, and comment. Override decisions are flagged for Layer 2 model calibration.
+      </div>
+    </div>
+
+    <!-- QUICK REFERENCE -->
+    <div class="panel">
+      <div class="section-title">Quick Reference</div>
+      <div class="metric-row">
+        <span class="metric-label">CWE-639</span>
+        <span style="font-size:11px;color:var(--text2)">IDOR — Insecure Direct Object Ref.</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">CWE-20</span>
+        <span style="font-size:11px;color:var(--text2)">Improper Input Validation</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">CWE-200</span>
+        <span style="font-size:11px;color:var(--text2)">Exposure of Sensitive Info</span>
+      </div>
+      <div style="margin-top:14px;font-size:11px;color:var(--text3);">
+        <div style="margin-bottom:6px;color:var(--text2);font-weight:600;">OWASP Reference</div>
+        <div>A01:2021 Broken Access Control</div>
+        <div>A03:2021 Injection</div>
+      </div>
+    </div>
+
+  </div><!-- /DECISION PANEL -->
+
+</main>
+
+<!-- CONFIRM OVERLAY -->
+<div class="overlay" id="confirmOverlay">
+  <div class="confirm-card">
+    <div class="confirm-icon" id="confirmIcon">✅</div>
+    <div class="confirm-title" id="confirmTitle">Confirm Decision</div>
+    <div class="confirm-text" id="confirmText">Are you sure you want to submit this decision? This action cannot be undone.</div>
+    <div class="confirm-buttons">
+      <button class="btn-confirm-no" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-confirm-yes" id="confirmYes" onclick="executeDecision()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-card">
+    <span class="success-emoji" id="successEmoji">✅</span>
+    <div class="success-title" id="successTitle">Decision Submitted</div>
+    <div class="success-sub" id="successSub">Logging to DynamoDB and notifying developer…</div>
+  </div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────
+const REVIEW_DATA = {
+  review_id:   "aicgqaf-7a3f91c2",
+  pr_number:   2304,
+  reviewer_id: "security_expert_001",
+  sla_minutes: 15,
+  l2_recommendation: "REVIEW_HUMAN",
+};
+
+// ── STATE ─────────────────────────────────────────────────
+let checkedCount = 0;
+let pendingDecision = null;
+let slaSeconds = REVIEW_DATA.sla_minutes * 60;
+
+// ── SLA TIMER ─────────────────────────────────────────────
+function updateSLA() {
+  slaSeconds--;
+  if (slaSeconds < 0) slaSeconds = 0;
+  const m = Math.floor(slaSeconds / 60).toString().padStart(2, '0');
+  const s = (slaSeconds % 60).toString().padStart(2, '0');
+  const el = document.getElementById('slaTimer');
+  el.textContent = `${m}:${s}`;
+  if (slaSeconds < 120) el.classList.add('urgent');
+  if (slaSeconds > 0) setTimeout(updateSLA, 1000);
+}
+setTimeout(updateSLA, 1000);
+
+// ── CHECKLIST ─────────────────────────────────────────────
+function toggleCheck(item) {
+  item.classList.toggle('checked');
+  checkedCount = document.querySelectorAll('.check-item.checked').length;
+  const total  = document.querySelectorAll('.check-item').length;
+  document.getElementById('checkCount').textContent = `${checkedCount} / ${total}`;
+  validateForm();
+}
+
+// ── CHAR COUNTER ──────────────────────────────────────────
+function updateCharCount() {
+  const len = document.getElementById('reviewComment').value.trim().length;
+  const el  = document.getElementById('charCounter');
+  if (len >= 20) {
+    el.textContent = `${len} characters ✓`;
+    el.className = 'char-counter ok';
+  } else {
+    el.textContent = `${len} / 20 minimum`;
+    el.className = 'char-counter bad';
+  }
+  validateForm();
+
+  // Show override warning if approving with l2=REVIEW_HUMAN
+  const overrideEl = document.getElementById('overrideWarn');
+  if (pendingDecision === 'APPROVE' && REVIEW_DATA.l2_recommendation !== 'APPROVE') {
+    overrideEl.classList.add('visible');
+  } else {
+    overrideEl.classList.remove('visible');
+  }
+}
+
+// ── FORM VALIDATION ───────────────────────────────────────
+function validateForm() {
+  const commentOk = document.getElementById('reviewComment').value.trim().length >= 20;
+  const total = document.querySelectorAll('.check-item').length;
+  const checklistOk = checkedCount === total;
+  const enabled = commentOk && checklistOk;
+
+  document.getElementById('btnApprove').disabled  = !enabled;
+  document.getElementById('btnChanges').disabled  = !enabled;
+  document.getElementById('btnReject').disabled   = !enabled;
+}
+
+// ── DECISION FLOW ─────────────────────────────────────────
+function submitDecision(decision, icon, title, subtext) {
+  pendingDecision = decision;
+  document.getElementById('confirmIcon').textContent  = icon;
+  document.getElementById('confirmTitle').textContent = `Confirm: ${title}`;
+  document.getElementById('confirmText').textContent  =
+    `You are about to submit decision "${title}" for PR #${REVIEW_DATA.pr_number}. ` +
+    `This will be logged permanently with your reviewer ID. ${subtext}`;
+
+  // Colour the confirm button
+  const yesBtn = document.getElementById('confirmYes');
+  const colours = { APPROVE:'#00a550', REQUEST_CHANGES:'#e65c00', REJECT:'#c62828' };
+  yesBtn.style.background = colours[decision] || '#2a8cff';
+
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('active');
+  pendingDecision = null;
+}
+
+function executeDecision() {
+  document.getElementById('confirmOverlay').classList.remove('active');
+
+  const payload = {
+    review_id:     REVIEW_DATA.review_id,
+    decision:      pendingDecision,
+    reviewer_id:   REVIEW_DATA.reviewer_id,
+    comment:       document.getElementById('reviewComment').value.trim(),
+    suggested_fix: document.getElementById('suggestedFix').value.trim(),
+    timestamp:     new Date().toISOString(),
+  };
+
+  console.log('[AICGQAF] Submitting Layer 3 decision:', payload);
+
+  // In production: POST to /api/v1/reviews/{review_id}/layer3/decision
+  // fetch(`/api/v1/reviews/${payload.review_id}/layer3/decision`, {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+  //   body: JSON.stringify(payload)
+  // });
+
+  // Show success
+  const icons = { APPROVE:'✅', REQUEST_CHANGES:'🔄', REJECT:'❌' };
+  const titles = { APPROVE:'Decision Submitted — Approved', REQUEST_CHANGES:'Changes Requested', REJECT:'Pull Request Rejected' };
+  const subs = {
+    APPROVE: 'PR approved. Merge is unblocked. Developer has been notified.',
+    REQUEST_CHANGES: 'Developer notified. PR re-enters pipeline on next push.',
+    REJECT: 'PR closed. Developer must open a new pull request.',
+  };
+  document.getElementById('successEmoji').textContent = icons[pendingDecision];
+  document.getElementById('successTitle').textContent = titles[pendingDecision];
+  document.getElementById('successSub').textContent   = subs[pendingDecision];
+  document.getElementById('successOverlay').classList.add('active');
+
+  // Redirect after 2.5s (in production)
+  setTimeout(() => {
+    document.getElementById('successOverlay').classList.remove('active');
+    alert(`[DEMO] Decision logged:\n\n${JSON.stringify(payload, null, 2)}`);
+  }, 2500);
+}
+
+// ── ANIMATE GAUGE BARS ON LOAD ────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.gauge-fill').forEach(el => {
+    const target = el.style.width;
+    el.style.width = '0%';
+    setTimeout(() => { el.style.width = target; }, 300);
+  });
+});
+</script>
+</body>
+</html>
