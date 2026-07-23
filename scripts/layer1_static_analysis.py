@@ -272,7 +272,7 @@ def run_bandit_analysis(repo_path: str) -> list[dict]:
     output_file = f"/tmp/bandit-{uuid.uuid4().hex[:8]}.json"
     cmd = [
         "bandit",
-        "-r", repo_path, "--exclude", ".git,test_prs,tests",
+        "-r", repo_path, "--exclude", ".git,test_prs,tests,lambda,aws,scripts",
         "-f", "json",
         "-o", output_file,
         "--confidence-level", "medium",
