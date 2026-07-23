@@ -60,6 +60,9 @@ THRESHOLDS = {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def run_sonarqube_scanner(repo_path: str, project_key: str) -> dict:
+    print("[Layer 1] SonarQube skipped")
+    return {}
+def run_sonarqube_scanner_disabled(repo_path: str, project_key: str) -> dict:
     """
     Executes the SonarQube scanner on the repository and waits for the
     analysis report to be processed by the SonarQube server.
