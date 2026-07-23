@@ -42,7 +42,6 @@ MODEL_CONFIG = {
     "model":       ANTHROPIC_MODEL,
     "max_tokens":  8000,
     "temperature": 0.3,
-    "top_p":       0.9,
 }
 
 # ─── Quality Gate 2 thresholds (Section 5.1.2) ────────────────────────────────
