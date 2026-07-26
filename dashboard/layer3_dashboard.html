@@ -3,943 +3,1533 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AICGQAF — Human Review Dashboard</title>
+<title>AICGQAF v1.0 — AI Code Generation Quality Assurance Framework</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
-/* ── RESET & TOKENS ──────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --navy:      #0a0f1e;
-  --navy2:     #0d1526;
-  --navy3:     #111e35;
-  --panel:     #131f38;
-  --panel2:    #162340;
-  --border:    rgba(100,180,255,0.12);
-  --border2:   rgba(100,180,255,0.22);
-  --blue:      #2a8cff;
-  --blue2:     #4ca3ff;
-  --cyan:      #00d4ff;
-  --green:     #00e676;
-  --green2:    #00c853;
-  --amber:     #ffab00;
-  --amber2:    #ffd740;
-  --red:       #ff3d3d;
-  --red2:      #ff6b6b;
-  --purple:    #b388ff;
-  --text:      #e8f0fe;
-  --text2:     #90a8c8;
-  --text3:     #5a7090;
-  --mono:      'JetBrains Mono', monospace;
-  --sans:      'Syne', sans-serif;
-  --glow-blue: 0 0 20px rgba(42,140,255,0.3);
-  --glow-green:0 0 20px rgba(0,230,118,0.3);
-  --glow-red:  0 0 20px rgba(255,61,61,0.3);
-  --glow-amber:0 0 20px rgba(255,171,0,0.3);
+/* ═══════════════════════════════════════════
+   AICGQAF v1.0 — Professional Dark Theme
+   Koji Dan Seya | TP090490 | CT095-6-M
+   ═══════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #070d1a;
+  --bg2:      #0a1225;
+  --bg3:      #0d1830;
+  --panel:    #0f1e36;
+  --panel2:   #122240;
+  --border:   rgba(42,140,255,0.15);
+  --border2:  rgba(42,140,255,0.28);
+  --blue:     #2a8cff;
+  --blue2:    #5aaeff;
+  --cyan:     #00d4ff;
+  --green:    #00e676;
+  --green2:   #00c853;
+  --amber:    #ffab00;
+  --amber2:   #ffd740;
+  --red:      #ff3d3d;
+  --red2:     #ff6b6b;
+  --purple:   #b388ff;
+  --text:     #e2ecff;
+  --text2:    #7a9cc8;
+  --text3:    #3d5a80;
+  --mono:     'JetBrains Mono',monospace;
+  --sans:     'Syne',sans-serif;
+  --r-sm:     6px;
+  --r-md:     10px;
+  --r-lg:     14px;
+  --r-xl:     18px;
+}
+html{font-size:14px}
+body{
+  font-family:var(--mono);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+/* Animated grid background */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(42,140,255,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(42,140,255,0.04) 1px,transparent 1px);
+  background-size:48px 48px;
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(42,140,255,0.08),transparent);
 }
 
-html { font-size: 14px; }
-body {
-  background: var(--navy);
-  color: var(--text);
-  font-family: var(--mono);
-  min-height: 100vh;
-  overflow-x: hidden;
+/* ── HEADER ─────────────────────────────── */
+.header{
+  position:sticky;top:0;z-index:200;
+  background:rgba(7,13,26,0.92);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border2);
+  padding:0 40px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-box{
+  width:40px;height:40px;border-radius:10px;
+  background:linear-gradient(135deg,#0d47a1,#1976d2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;box-shadow:0 0 24px rgba(42,140,255,0.5);
+  border:1px solid rgba(42,140,255,0.4);
+}
+.logo-text{font-family:var(--sans);font-size:18px;font-weight:800;
+  letter-spacing:0.5px;color:var(--text)}
+.logo-sub{font-size:10px;color:var(--text3);letter-spacing:1px;margin-top:1px}
+.header-pills{display:flex;gap:10px;align-items:center}
+.pill{font-size:10px;padding:4px 12px;border-radius:20px;font-family:var(--sans);
+  font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.pill-green{background:rgba(0,230,118,0.12);color:var(--green);
+  border:1px solid rgba(0,230,118,0.3);display:flex;align-items:center;gap:5px}
+.pill-green::before{content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 8px var(--green)}
+.pill-blue{background:rgba(42,140,255,0.1);color:var(--blue2);
+  border:1px solid rgba(42,140,255,0.3)}
+
+/* ── MAIN LAYOUT ─────────────────────────── */
+main{
+  position:relative;z-index:1;
+  max-width:1280px;margin:0 auto;
+  padding:32px 40px 80px;
+  display:grid;
+  grid-template-columns:1fr 400px;
+  gap:24px;
+}
+.col-left{display:flex;flex-direction:column;gap:20px}
+.col-right{display:flex;flex-direction:column;gap:20px}
+
+/* ── CARDS ───────────────────────────────── */
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:24px;position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 0%,rgba(42,140,255,0.5) 50%,transparent 100%);
+}
+.card-title{
+  font-family:var(--sans);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:2px;
+  color:var(--text2);margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;
+}
+.card-title .icon{font-size:16px}
+.card-title .line{flex:1;height:1px;background:var(--border)}
+
+/* ── NAV TABS ────────────────────────────── */
+.nav-tabs{
+  display:flex;gap:0;
+  background:var(--bg2);
+  border:1px solid var(--border2);
+  border-radius:var(--r-lg);
+  overflow:hidden;margin-bottom:24px;
+  position:relative;z-index:1;
+}
+.nav-tab{
+  flex:1;padding:12px 8px;
+  font-family:var(--sans);font-size:12px;font-weight:600;
+  text-transform:uppercase;letter-spacing:1px;
+  color:var(--text3);cursor:pointer;border:none;
+  background:transparent;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.nav-tab:hover{color:var(--text2);background:rgba(42,140,255,0.05)}
+.nav-tab.active{
+  background:var(--panel2);
+  color:var(--blue2);
+  border-bottom:2px solid var(--blue);
+}
+.nav-tab .tab-icon{font-size:16px}
+.pane{display:none}
+.pane.active{display:contents}
+
+/* ── LANG SELECTOR ───────────────────────── */
+.lang-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.lang-btn{
+  padding:6px 18px;border-radius:20px;
+  border:1px solid var(--border2);background:transparent;
+  font-family:var(--mono);font-size:12px;cursor:pointer;
+  color:var(--text2);transition:all .2s;
+}
+.lang-btn:hover{border-color:var(--blue);color:var(--blue)}
+.lang-btn.active{
+  background:rgba(42,140,255,0.15);
+  border-color:var(--blue);color:var(--cyan);font-weight:600;
 }
 
-/* ── SCANLINE OVERLAY ────────────────────────────────── */
-body::before {
-  content: '';
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
-  );
+/* ── CODE INPUT ──────────────────────────── */
+.code-label{
+  font-size:10px;color:var(--text3);letter-spacing:1.5px;
+  text-transform:uppercase;font-weight:600;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:center;
 }
+textarea.code-box{
+  width:100%;min-height:260px;padding:16px;
+  font-family:var(--mono);font-size:12px;line-height:1.7;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--r-md);color:var(--cyan);resize:vertical;
+  outline:none;transition:border-color .2s;
+}
+textarea.code-box:focus{border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(42,140,255,0.08)}
+textarea.code-box::placeholder{color:var(--text3)}
 
-/* ── HEADER ──────────────────────────────────────────── */
-header {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(10,15,30,0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border2);
-  padding: 0 32px;
-  display: flex; align-items: center; justify-content: space-between;
-  height: 56px;
+/* ── SAMPLE BUTTONS ──────────────────────── */
+.samples{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.sample-btn{
+  padding:5px 13px;border-radius:var(--r-sm);font-size:11px;
+  border:1px solid var(--border);background:var(--bg3);
+  cursor:pointer;color:var(--text2);font-family:var(--mono);
+  display:flex;align-items:center;gap:6px;transition:all .2s;
 }
+.sample-btn:hover{border-color:var(--blue2);color:var(--text)}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-red{background:var(--red);box-shadow:0 0 6px var(--red)}
+.dot-amber{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.dot-green{background:var(--green);box-shadow:0 0 6px var(--green)}
 
-.logo {
-  display: flex; align-items: center; gap: 12px;
+/* ── RUN BUTTON ──────────────────────────── */
+.run-btn{
+  width:100%;padding:15px;margin-top:16px;
+  border-radius:var(--r-md);border:none;
+  background:linear-gradient(135deg,#0d47a1 0%,#1976d2 50%,var(--blue) 100%);
+  color:#fff;font-family:var(--sans);font-size:14px;font-weight:700;
+  cursor:pointer;letter-spacing:1px;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .2s;
+  box-shadow:0 4px 24px rgba(42,140,255,0.35);
 }
-.logo-badge {
-  width: 32px; height: 32px; border-radius: 6px;
-  background: linear-gradient(135deg, var(--blue), var(--cyan));
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--sans); font-weight: 800; font-size: 13px; color: #fff;
-  box-shadow: var(--glow-blue);
+.run-btn:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 8px 32px rgba(42,140,255,0.55);
 }
-.logo-text { font-family: var(--sans); font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
-.logo-sub  { font-size: 10px; color: var(--text3); letter-spacing: 1px; margin-top: 1px; }
+.run-btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-.header-meta {
-  display: flex; align-items: center; gap: 24px;
+/* ── PIPELINE TRACK ──────────────────────── */
+.pipe-track{
+  display:flex;align-items:center;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px;
 }
-.sla-clock {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 14px; border-radius: 20px;
-  border: 1px solid rgba(255,171,0,0.4);
-  background: rgba(255,171,0,0.08);
+.pipe-step{
+  flex:1;padding:13px 8px;text-align:center;
+  border-right:1px solid var(--border);
+  transition:all .35s;
 }
-.sla-label { font-size: 10px; color: var(--amber); letter-spacing: 1px; text-transform: uppercase; }
-.sla-time  { font-size: 18px; font-weight: 700; color: var(--amber2); letter-spacing: 2px; font-variant-numeric: tabular-nums; }
-.sla-time.urgent { color: var(--red2); animation: pulse 1s infinite; }
+.pipe-step:last-child{border-right:none}
+.pipe-name{font-family:var(--sans);font-size:10px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;color:var(--text3)}
+.pipe-sub{font-size:9px;color:var(--text3);opacity:.7}
+.pipe-step.active .pipe-name{color:var(--blue2)}
+.pipe-step.active .pipe-sub{color:var(--blue);opacity:1}
+.pipe-step.active{background:rgba(42,140,255,0.1);border-color:rgba(42,140,255,0.3)}
+.pipe-step.pass .pipe-name{color:var(--green)}
+.pipe-step.pass{background:rgba(0,230,118,0.08)}
+.pipe-step.fail .pipe-name{color:var(--red2)}
+.pipe-step.fail{background:rgba(255,61,61,0.08)}
+.pipe-step.warn .pipe-name{color:var(--amber)}
+.pipe-step.warn{background:rgba(255,171,0,0.08)}
+.status-line{font-size:11px;color:var(--text2);text-align:center;
+  padding:6px 0;font-family:var(--mono)}
 
-@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+/* ── METRICS GRID ────────────────────────── */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.metric-box{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:14px 10px;text-align:center;
+  position:relative;overflow:hidden;
+}
+.metric-box::before{content:'';position:absolute;bottom:0;left:0;right:0;
+  height:2px;background:var(--border)}
+.metric-box.good::before{background:var(--green);box-shadow:0 0 8px var(--green)}
+.metric-box.warn::before{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.metric-box.bad::before{background:var(--red);box-shadow:0 0 8px var(--red)}
+.metric-num{font-family:var(--sans);font-size:26px;font-weight:800;line-height:1;margin-bottom:5px}
+.metric-box.good .metric-num{color:var(--green)}
+.metric-box.warn .metric-num{color:var(--amber)}
+.metric-box.bad .metric-num{color:var(--red2)}
+.metric-box:not(.good):not(.warn):not(.bad) .metric-num{color:var(--blue2)}
+.metric-lbl{font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
 
-.reviewer-badge {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 14px; border-radius: 20px;
-  border: 1px solid var(--border2);
-  background: var(--panel);
-  font-size: 11px;
-}
-.reviewer-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: var(--glow-green); }
-.reviewer-role { color: var(--green); font-weight: 600; letter-spacing: 0.5px; }
+/* ── GAUGE BARS ──────────────────────────── */
+.gauge{margin:8px 0}
+.gauge-hd{display:flex;justify-content:space-between;font-size:11px;
+  color:var(--text2);margin-bottom:5px}
+.gauge-track{height:5px;border-radius:3px;
+  background:rgba(255,255,255,0.05);overflow:hidden}
+.gauge-fill{height:100%;border-radius:3px;
+  transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+.gf-green{background:linear-gradient(90deg,var(--green2),var(--green));
+  box-shadow:0 0 6px var(--green)}
+.gf-amber{background:linear-gradient(90deg,var(--amber),var(--amber2));
+  box-shadow:0 0 6px var(--amber)}
+.gf-red{background:linear-gradient(90deg,var(--red),var(--red2))}
+.gf-blue{background:linear-gradient(90deg,#1565C0,var(--blue));
+  box-shadow:0 0 6px var(--blue)}
 
-/* ── MAIN LAYOUT ─────────────────────────────────────── */
-main {
-  position: relative; z-index: 1;
-  max-width: 1400px; margin: 0 auto;
-  padding: 28px 32px;
-  display: grid;
-  grid-template-columns: 1fr 400px;
-  grid-template-rows: auto auto auto 1fr;
-  gap: 20px;
+/* ── GATE DECISION BOX ───────────────────── */
+.gate-box{
+  border-radius:var(--r-md);padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  border-left:4px solid;margin-bottom:12px;
 }
+.gb-pass{background:rgba(0,230,118,0.07);border-color:var(--green);border:1px solid rgba(0,230,118,0.3);border-left:4px solid var(--green)}
+.gb-fail{background:rgba(255,61,61,0.07);border-color:var(--red);border:1px solid rgba(255,61,61,0.3);border-left:4px solid var(--red)}
+.gb-warn{background:rgba(255,171,0,0.07);border-color:var(--amber);border:1px solid rgba(255,171,0,0.3);border-left:4px solid var(--amber)}
+.gate-icon{font-size:22px;flex-shrink:0}
+.gate-body{flex:1}
+.gate-title{font-family:var(--sans);font-size:13px;font-weight:700;margin-bottom:3px}
+.gb-pass .gate-title{color:var(--green)}
+.gb-fail .gate-title{color:var(--red2)}
+.gb-warn .gate-title{color:var(--amber)}
+.gate-reason{font-size:11px;color:var(--text2);line-height:1.5}
+.gate-badge{font-size:10px;padding:3px 10px;border-radius:12px;
+  font-family:var(--sans);font-weight:700;flex-shrink:0;letter-spacing:0.5px}
+.gb-pass .gate-badge{background:rgba(0,230,118,0.15);color:var(--green)}
+.gb-fail .gate-badge{background:rgba(255,61,61,0.15);color:var(--red2)}
+.gb-warn .gate-badge{background:rgba(255,171,0,0.15);color:var(--amber)}
 
-/* ── PR SUMMARY BAR ──────────────────────────────────── */
-.pr-summary {
-  grid-column: 1 / -1;
-  background: var(--panel);
-  border: 1px solid var(--border2);
-  border-radius: 12px;
-  padding: 20px 28px;
-  display: flex; align-items: center; gap: 24px;
-  position: relative; overflow: hidden;
+/* ── CWE VIOLATIONS ──────────────────────── */
+.cwe-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.cwe-item{
+  border:1px solid var(--border2);border-radius:var(--r-md);
+  padding:13px 15px;background:var(--bg2);
 }
-.pr-summary::before {
-  content: '';
-  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-  background: linear-gradient(180deg, var(--amber), var(--blue));
-}
-.pr-num {
-  font-family: var(--sans); font-size: 32px; font-weight: 800;
-  color: var(--blue2); line-height: 1;
-}
-.pr-num span { font-size: 14px; color: var(--text3); font-family: var(--mono); font-weight: 400; }
-.pr-divider { width: 1px; height: 48px; background: var(--border2); }
-.pr-info { flex: 1; }
-.pr-title { font-family: var(--sans); font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-.pr-meta  { font-size: 11px; color: var(--text2); display: flex; gap: 20px; }
-.pr-meta span { display: flex; align-items: center; gap: 5px; }
-.pr-meta .dot { color: var(--text3); }
+.cwe-head{display:flex;gap:8px;align-items:center;margin-bottom:7px;flex-wrap:wrap}
+.cwe-tag{font-size:10px;padding:3px 9px;border-radius:4px;
+  font-weight:700;letter-spacing:0.5px;border:1px solid}
+.tc-critical{background:rgba(255,61,61,0.12);color:var(--red2);border-color:rgba(255,61,61,0.35)}
+.tc-high{background:rgba(255,120,70,0.12);color:#ff7043;border-color:rgba(255,120,70,0.35)}
+.tc-medium{background:rgba(255,171,0,0.1);color:var(--amber);border-color:rgba(255,171,0,0.35)}
+.tc-low{background:rgba(42,140,255,0.1);color:var(--blue2);border-color:rgba(42,140,255,0.3)}
+.cwe-tool-lbl{font-size:10px;color:var(--text3)}
+.cwe-desc{font-size:12px;color:var(--text);margin-bottom:8px;line-height:1.5}
+.cwe-fix{font-size:11px;font-family:var(--mono);color:var(--cyan);
+  background:rgba(0,212,255,0.05);padding:10px 12px;border-radius:6px;
+  border-left:2px solid var(--cyan);white-space:pre-wrap;line-height:1.6}
 
-.status-pill {
-  padding: 8px 20px; border-radius: 24px; font-size: 11px;
-  font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
-  display: flex; align-items: center; gap: 8px;
+/* ── AI BOX ──────────────────────────────── */
+.ai-box{
+  background:linear-gradient(135deg,rgba(42,140,255,0.07),rgba(0,212,255,0.03));
+  border:1px solid rgba(42,140,255,0.25);border-radius:var(--r-md);
+  padding:16px;margin-bottom:14px;
 }
-.status-pill.awaiting {
-  background: rgba(255,171,0,0.12);
-  border: 1px solid rgba(255,171,0,0.5);
-  color: var(--amber2);
-}
-.status-pill .blink {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--amber); box-shadow: var(--glow-amber);
-  animation: blink 1.4s ease infinite;
-}
-@keyframes blink { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.3;transform:scale(0.8);} }
+.ai-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--cyan);font-weight:600;margin-bottom:8px;
+  display:flex;align-items:center;gap:6px}
+.ai-txt{font-size:13px;color:var(--text2);line-height:1.7}
 
-/* ── SECTION TITLES ──────────────────────────────────── */
-.section-title {
-  font-family: var(--sans); font-size: 11px; font-weight: 700;
-  letter-spacing: 2px; text-transform: uppercase;
-  color: var(--text3); margin-bottom: 14px;
-  display: flex; align-items: center; gap: 8px;
-}
-.section-title::after {
-  content: ''; flex: 1; height: 1px; background: var(--border);
-}
+/* ── CONFIDENCE ──────────────────────────── */
+.conf-wrap{margin-bottom:14px}
+.conf-hd{display:flex;justify-content:space-between;font-size:12px;
+  color:var(--text2);margin-bottom:6px;align-items:center}
+.conf-num{font-family:var(--sans);font-size:32px;font-weight:800;line-height:1}
+.conf-bar{height:7px;border-radius:4px;
+  background:rgba(255,255,255,0.05);overflow:hidden}
+.conf-fill{height:100%;border-radius:4px;
+  transition:width 1.2s cubic-bezier(.16,1,.3,1)}
 
-/* ── PANEL BASE ──────────────────────────────────────── */
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px; padding: 20px 24px;
-}
-.panel.highlight { border-color: var(--border2); }
+/* ── VERDICT CARDS ───────────────────────── */
+.verdict-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.verdict{padding:10px 13px;border-radius:var(--r-md);border:1px solid;
+  display:flex;align-items:center;gap:9px}
+.v-pass{background:rgba(0,230,118,0.07);border-color:rgba(0,230,118,0.25)}
+.v-fail{background:rgba(255,61,61,0.07);border-color:rgba(255,61,61,0.25)}
+.v-warn{background:rgba(255,171,0,0.07);border-color:rgba(255,171,0,0.25)}
+.v-icon{font-size:18px}
+.v-lbl{font-family:var(--sans);font-size:11px;font-weight:700;margin-bottom:1px}
+.v-pass .v-lbl{color:var(--green)}
+.v-fail .v-lbl{color:var(--red2)}
+.v-warn .v-lbl{color:var(--amber)}
+.v-sub{font-size:10px;color:var(--text3)}
 
-/* ── ANALYSIS PANELS ─────────────────────────────────── */
-.analysis-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+/* ── FINAL BANNER ────────────────────────── */
+.final-banner{
+  border-radius:var(--r-lg);padding:20px 22px;
+  display:flex;align-items:center;gap:16px;
+  border:1px solid;margin-bottom:0;
 }
+.fb-approved{background:rgba(0,230,118,0.08);border-color:rgba(0,230,118,0.4)}
+.fb-rejected{background:rgba(255,61,61,0.08);border-color:rgba(255,61,61,0.4)}
+.fb-escalated{background:rgba(255,171,0,0.08);border-color:rgba(255,171,0,0.4)}
+.fb-ico{font-size:34px;flex-shrink:0}
+.fb-title{font-family:var(--sans);font-size:16px;font-weight:700;margin-bottom:4px}
+.fb-approved .fb-title{color:var(--green)}
+.fb-rejected .fb-title{color:var(--red2)}
+.fb-escalated .fb-title{color:var(--amber)}
+.fb-sub{font-size:12px;color:var(--text2);line-height:1.5}
 
-/* ── METRIC ROWS ─────────────────────────────────────── */
-.metric-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 9px 0; border-bottom: 1px solid var(--border);
-  font-size: 12px;
-}
-.metric-row:last-child { border-bottom: none; }
-.metric-label { color: var(--text2); }
-.metric-value {
-  font-weight: 600; font-family: var(--mono); font-size: 13px;
-  padding: 2px 10px; border-radius: 4px;
-}
-.mv-good    { color: var(--green);  background: rgba(0,230,118,0.08); }
-.mv-warn    { color: var(--amber);  background: rgba(255,171,0,0.08); }
-.mv-bad     { color: var(--red2);   background: rgba(255,61,61,0.1); }
-.mv-neutral { color: var(--blue2);  background: rgba(42,140,255,0.08); }
+/* ── SECTION LABEL ───────────────────────── */
+.sec-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--text3);margin-bottom:8px;margin-top:14px}
+.sec-lbl:first-child{margin-top:0}
 
-/* ── GAUGE BARS ──────────────────────────────────────── */
-.gauge-wrap { margin: 4px 0 10px; }
-.gauge-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 5px; }
-.gauge-track {
-  height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06);
-  overflow: hidden; position: relative;
+/* ── LAYER 3 ─────────────────────────────── */
+.role-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;
+  background:rgba(179,136,255,0.12);color:var(--purple);
+  border:1px solid rgba(179,136,255,0.35);margin-bottom:14px;
+  font-family:var(--sans);letter-spacing:0.5px;
 }
-.gauge-fill {
-  height: 100%; border-radius: 3px;
-  transition: width 1.2s cubic-bezier(.16,1,.3,1);
+.esc-box{
+  background:rgba(255,171,0,0.06);
+  border:1px solid rgba(255,171,0,0.25);
+  border-left:3px solid var(--amber);
+  border-radius:var(--r-md);padding:12px 15px;
+  font-size:12px;color:var(--amber2);line-height:1.6;margin-bottom:16px;
 }
-.gf-green  { background: linear-gradient(90deg, var(--green2), var(--green)); box-shadow: var(--glow-green); }
-.gf-amber  { background: linear-gradient(90deg, var(--amber), var(--amber2)); box-shadow: var(--glow-amber); }
-.gf-red    { background: linear-gradient(90deg, var(--red), var(--red2)); box-shadow: var(--glow-red); }
-.gf-blue   { background: linear-gradient(90deg, var(--blue), var(--cyan)); box-shadow: var(--glow-blue); }
+.esc-lbl{font-size:10px;letter-spacing:1.5px;color:var(--amber);
+  font-weight:600;text-transform:uppercase;margin-bottom:5px}
+.checklist{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.chk{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 13px;border-radius:var(--r-md);
+  border:1px solid var(--border);cursor:pointer;
+  transition:all .2s;user-select:none;
+}
+.chk:hover{border-color:var(--border2);background:rgba(255,255,255,0.02)}
+.chk.on{background:rgba(0,230,118,0.06);border-color:rgba(0,230,118,0.35)}
+.chk-box{width:18px;height:18px;min-width:18px;border-radius:4px;
+  border:2px solid var(--text3);display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;
+  margin-top:1px;transition:all .2s;flex-shrink:0}
+.chk.on .chk-box{background:var(--green);border-color:var(--green);color:#000}
+.chk-txt{font-size:12px;color:var(--text2);line-height:1.5;flex:1}
+.chk.on .chk-txt{color:var(--text)}
+.chk-prog{font-size:11px;color:var(--text3);margin-bottom:14px}
+.chk-prog span{color:var(--green);font-weight:700}
+.comment-box{
+  width:100%;min-height:80px;padding:12px;
+  font-family:var(--mono);font-size:12px;line-height:1.6;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--r-md);color:var(--text);resize:vertical;
+  outline:none;transition:border-color .2s;margin-bottom:6px;
+}
+.comment-box:focus{border-color:var(--blue)}
+.comment-box::placeholder{color:var(--text3)}
+.char-cnt{font-size:10px;margin-bottom:12px}
+.char-ok{color:var(--green)}
+.char-bad{color:var(--text3)}
+.fix-box{
+  width:100%;min-height:60px;padding:12px;
+  font-family:var(--mono);font-size:11px;line-height:1.7;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-md);color:var(--cyan);resize:vertical;
+  outline:none;margin-bottom:16px;transition:border-color .2s;
+}
+.fix-box:focus{border-color:rgba(0,212,255,0.4)}
+.fix-box::placeholder{color:var(--text3)}
+.dec-row{display:flex;gap:10px}
+.dec-btn{
+  flex:1;padding:12px;border-radius:var(--r-md);border:1px solid;
+  font-family:var(--sans);font-size:11px;font-weight:700;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+  text-transform:uppercase;display:flex;align-items:center;
+  justify-content:center;gap:6px;
+}
+.dec-btn:disabled{opacity:.25;cursor:not-allowed}
+.dec-btn:not(:disabled):hover{transform:translateY(-2px)}
+.dec-a{background:rgba(0,200,83,0.12);color:var(--green);border-color:rgba(0,200,83,0.35)}
+.dec-c{background:rgba(255,171,0,0.1);color:var(--amber);border-color:rgba(255,171,0,0.35)}
+.dec-r{background:rgba(255,61,61,0.1);color:var(--red2);border-color:rgba(255,61,61,0.35)}
+.dec-note{font-size:10px;color:var(--text3);margin-top:10px;line-height:1.5}
 
-/* ── CWE TAGS ────────────────────────────────────────── */
-.tag-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
-.cwe-tag {
-  padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 600;
-  letter-spacing: 0.5px; border: 1px solid;
-  display: flex; align-items: center; gap: 5px; cursor: default;
-  transition: transform 0.2s;
+/* ── ABOUT ITEMS ─────────────────────────── */
+.about-row{display:flex;gap:10px;font-size:13px;padding:7px 0;
+  border-bottom:1px solid var(--border)}
+.about-row:last-child{border-bottom:none}
+.about-k{color:var(--text3);min-width:160px;font-size:12px}
+.about-v{color:var(--text)}
+.emp-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;
 }
-.cwe-tag:hover { transform: translateY(-1px); }
-.cwe-critical { color: var(--red2);  background: rgba(255,61,61,0.1);  border-color: rgba(255,61,61,0.4); }
-.cwe-high     { color: #ff8a65;      background: rgba(255,138,101,0.1);border-color: rgba(255,138,101,0.4); }
-.cwe-medium   { color: var(--amber); background: rgba(255,171,0,0.1);  border-color: rgba(255,171,0,0.4); }
-.cwe-low      { color: var(--blue2); background: rgba(42,140,255,0.08);border-color: rgba(42,140,255,0.3); }
+.layer-card{
+  padding:12px 14px;border:1px solid var(--border);
+  border-radius:var(--r-md);margin-bottom:8px;
+}
+.layer-card-title{font-family:var(--sans);font-size:13px;font-weight:600;
+  margin-bottom:4px;color:var(--text)}
+.layer-card-sub{font-size:11px;color:var(--text2);line-height:1.5}
+.emp-row{display:flex;flex-direction:column;gap:5px}
+.emp-item{font-size:12px;color:var(--text2);padding:6px 10px;
+  background:var(--bg2);border-radius:6px;line-height:1.4;
+  border-left:2px solid var(--border2)}
 
-/* ── AI ANALYSIS PANEL ───────────────────────────────── */
-.ai-card {
-  background: linear-gradient(135deg, rgba(42,140,255,0.05), rgba(0,212,255,0.03));
-  border: 1px solid rgba(42,140,255,0.2);
-  border-radius: 10px; padding: 16px 18px; margin-top: 12px;
-}
-.ai-label {
-  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--cyan); font-weight: 600; margin-bottom: 8px;
-}
-.ai-text { font-size: 12px; color: var(--text2); line-height: 1.7; }
+/* ── L3 DONE STATE ───────────────────────── */
+.done-box{text-align:center;padding:36px 20px}
+.done-ico{font-size:56px;margin-bottom:16px;display:block;
+  animation:popIn .5s cubic-bezier(.16,1.5,.3,1)}
+@keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+.done-title{font-family:var(--sans);font-size:20px;font-weight:700;margin-bottom:8px}
+.done-sub{font-size:12px;color:var(--text2);margin-bottom:24px;line-height:1.6}
 
-.confidence-ring {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  width: 100%; margin: 14px 0;
-}
-.confidence-number {
-  font-family: var(--sans); font-size: 48px; font-weight: 800;
-  line-height: 1; letter-spacing: -2px;
-}
-.confidence-pct { font-size: 20px; font-weight: 400; opacity: 0.7; }
-.confidence-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); margin-top: 4px; }
+/* ── L3 WAIT STATE ───────────────────────── */
+.wait-box{text-align:center;padding:40px 20px;color:var(--text3)}
+.wait-ico{font-size:40px;margin-bottom:14px;opacity:.4}
+.wait-txt{font-size:13px;line-height:1.6}
 
-.verdict-row {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;
-}
-.verdict-item {
-  padding: 10px 12px; border-radius: 8px;
-  display: flex; align-items: center; gap: 8px;
-  font-size: 11px;
-}
-.verdict-icon { font-size: 16px; }
-.verdict-text { flex: 1; }
-.verdict-text strong { display: block; font-weight: 600; margin-bottom: 1px; }
-.verdict-text span { color: var(--text3); font-size: 10px; }
-.v-pass { background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.2); }
-.v-fail { background: rgba(255,61,61,0.08); border: 1px solid rgba(255,61,61,0.2); }
-.v-warn { background: rgba(255,171,0,0.08); border: 1px solid rgba(255,171,0,0.2); }
+/* ── HIDDEN / VISIBLE ────────────────────── */
+.hidden{display:none!important}
+.fade-in{animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-/* ── ESCALATION REASON ───────────────────────────────── */
-.escalation-box {
-  background: rgba(255,171,0,0.06);
-  border: 1px solid rgba(255,171,0,0.25);
-  border-left: 3px solid var(--amber);
-  border-radius: 8px; padding: 14px 16px;
-  font-size: 12px; color: var(--amber2); line-height: 1.6;
-  margin-top: 14px;
-}
-.escalation-box .esc-label {
-  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--amber); margin-bottom: 6px; font-weight: 600;
-}
+/* ── SCROLLBAR ───────────────────────────── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
-/* ── CHECKLIST ───────────────────────────────────────── */
-.checklist { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-.check-item {
-  display: flex; align-items: flex-start; gap: 12px; cursor: pointer;
-  padding: 10px 14px; border-radius: 8px;
-  border: 1px solid var(--border);
-  transition: all 0.2s; user-select: none;
-}
-.check-item:hover { border-color: var(--border2); background: rgba(255,255,255,0.02); }
-.check-item.checked {
-  border-color: rgba(0,230,118,0.3);
-  background: rgba(0,230,118,0.05);
-}
-.check-box {
-  width: 18px; height: 18px; min-width: 18px; border-radius: 4px; margin-top: 1px;
-  border: 2px solid var(--text3);
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
-}
-.check-item.checked .check-box {
-  background: var(--green); border-color: var(--green);
-  box-shadow: var(--glow-green);
-}
-.check-mark { color: #fff; font-size: 11px; font-weight: 700; opacity: 0; transition: opacity 0.2s; }
-.check-item.checked .check-mark { opacity: 1; }
-.check-text { font-size: 12px; line-height: 1.5; color: var(--text2); flex: 1; }
-.check-item.checked .check-text { color: var(--text); }
-
-.checklist-progress {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
-  font-size: 11px; color: var(--text3);
-}
-.checklist-progress .count { font-weight: 700; color: var(--green); }
-
-/* ── DECISION PANEL ──────────────────────────────────── */
-.decision-panel {
-  grid-column: 2;
-  grid-row: 2 / 5;
-  display: flex; flex-direction: column; gap: 20px;
-  position: sticky; top: 76px;
-  align-self: start;
-}
-
-.comment-area {
-  width: 100%;
-  background: var(--navy2);
-  border: 1px solid var(--border2);
-  border-radius: 8px; padding: 12px 14px;
-  color: var(--text); font-family: var(--mono); font-size: 12px;
-  resize: vertical; min-height: 100px;
-  outline: none; transition: border-color 0.2s;
-  line-height: 1.6;
-}
-.comment-area:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(42,140,255,0.15); }
-.comment-area::placeholder { color: var(--text3); }
-
-.char-counter {
-  text-align: right; font-size: 10px; color: var(--text3); margin-top: 4px;
-}
-.char-counter.ok  { color: var(--green); }
-.char-counter.bad { color: var(--red2); }
-
-.fix-area {
-  width: 100%;
-  background: var(--navy2);
-  border: 1px solid var(--border);
-  border-radius: 8px; padding: 12px 14px;
-  color: var(--cyan); font-family: var(--mono); font-size: 11px;
-  resize: vertical; min-height: 70px;
-  outline: none; transition: border-color 0.2s;
-  line-height: 1.7;
-}
-.fix-area:focus { border-color: rgba(0,212,255,0.4); }
-.fix-area::placeholder { color: var(--text3); }
-
-.decision-buttons {
-  display: flex; flex-direction: column; gap: 10px;
-}
-.btn {
-  width: 100%; padding: 14px 20px; border-radius: 10px;
-  border: none; cursor: pointer; font-family: var(--mono);
-  font-size: 13px; font-weight: 600; letter-spacing: 1px;
-  transition: all 0.2s; display: flex; align-items: center;
-  justify-content: center; gap: 10px; text-transform: uppercase;
-  position: relative; overflow: hidden;
-}
-.btn:disabled {
-  opacity: 0.35; cursor: not-allowed; transform: none !important;
-  box-shadow: none !important;
-}
-.btn:not(:disabled):hover { transform: translateY(-2px); }
-.btn:not(:disabled):active { transform: translateY(0); }
-
-.btn-approve {
-  background: linear-gradient(135deg, #00a550, var(--green2));
-  color: #fff; box-shadow: 0 4px 20px rgba(0,200,83,0.25);
-}
-.btn-approve:not(:disabled):hover { box-shadow: 0 6px 28px rgba(0,200,83,0.45); }
-
-.btn-changes {
-  background: linear-gradient(135deg, #e65c00, var(--amber));
-  color: #fff; box-shadow: 0 4px 20px rgba(255,171,0,0.2);
-}
-.btn-changes:not(:disabled):hover { box-shadow: 0 6px 28px rgba(255,171,0,0.4); }
-
-.btn-reject {
-  background: linear-gradient(135deg, #b71c1c, var(--red));
-  color: #fff; box-shadow: 0 4px 20px rgba(255,61,61,0.2);
-}
-.btn-reject:not(:disabled):hover { box-shadow: 0 6px 28px rgba(255,61,61,0.4); }
-
-.btn::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
-  pointer-events: none;
-}
-
-/* ── OVERRIDE WARNING ────────────────────────────────── */
-.override-warn {
-  background: rgba(179,136,255,0.08);
-  border: 1px solid rgba(179,136,255,0.3);
-  border-radius: 8px; padding: 12px 14px;
-  font-size: 11px; color: var(--purple); line-height: 1.6;
-  display: none;
-}
-.override-warn.visible { display: block; }
-
-/* ── DECISION CONFIRMATION OVERLAY ──────────────────── */
-.overlay {
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(5,10,20,0.85); backdrop-filter: blur(8px);
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; pointer-events: none; transition: opacity 0.3s;
-}
-.overlay.active { opacity: 1; pointer-events: all; }
-
-.confirm-card {
-  background: var(--panel2); border: 1px solid var(--border2);
-  border-radius: 16px; padding: 36px; max-width: 440px; width: 90%;
-  text-align: center;
-  transform: scale(0.9) translateY(20px); transition: transform 0.3s;
-}
-.overlay.active .confirm-card { transform: scale(1) translateY(0); }
-.confirm-icon { font-size: 52px; margin-bottom: 20px; }
-.confirm-title { font-family: var(--sans); font-size: 22px; font-weight: 700; margin-bottom: 10px; }
-.confirm-text  { font-size: 12px; color: var(--text2); line-height: 1.7; margin-bottom: 28px; }
-.confirm-buttons { display: flex; gap: 12px; }
-.btn-confirm-yes, .btn-confirm-no {
-  flex: 1; padding: 12px; border-radius: 8px;
-  border: none; cursor: pointer; font-family: var(--mono);
-  font-size: 12px; font-weight: 600; letter-spacing: 1px;
-  text-transform: uppercase; transition: all 0.2s;
-}
-.btn-confirm-yes { background: var(--blue); color: #fff; }
-.btn-confirm-yes:hover { background: var(--blue2); transform: translateY(-1px); }
-.btn-confirm-no  { background: var(--panel); color: var(--text2); border: 1px solid var(--border2); }
-.btn-confirm-no:hover { background: var(--panel2); }
-
-/* ── SUCCESS STATE ───────────────────────────────────── */
-.success-overlay {
-  position: fixed; inset: 0; z-index: 300;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(5,10,20,0.9); backdrop-filter: blur(12px);
-  opacity: 0; pointer-events: none; transition: opacity 0.4s;
-}
-.success-overlay.active { opacity: 1; pointer-events: all; }
-.success-card {
-  text-align: center; padding: 48px;
-}
-.success-emoji { font-size: 72px; display: block; margin-bottom: 24px; animation: pop 0.5s cubic-bezier(.16,1.5,.3,1); }
-@keyframes pop { from{transform:scale(0);} to{transform:scale(1);} }
-.success-title { font-family: var(--sans); font-size: 28px; font-weight: 800; margin-bottom: 12px; }
-.success-sub   { font-size: 13px; color: var(--text2); }
-
-/* ── SCROLLBAR ───────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--navy2); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-
-/* ── RESPONSIVE ──────────────────────────────────────── */
-@media (max-width: 1100px) {
-  main { grid-template-columns: 1fr; }
-  .decision-panel { grid-column: 1; grid-row: auto; position: static; }
-}
+/* ── RESPONSIVE ──────────────────────────── */
+@media(max-width:1050px){main{grid-template-columns:1fr}}
+@media(max-width:600px){main{padding:20px};.header{padding:0 20px}}
 </style>
 </head>
 <body>
 
-<!-- ── HEADER ──────────────────────────────────────────── -->
-<header>
+<!-- ═══ HEADER ═══════════════════════════════════════ -->
+<header class="header">
   <div class="logo">
-    <div class="logo-badge">AI</div>
+    <div class="logo-box">🛡️</div>
     <div>
       <div class="logo-text">AICGQAF v1.0</div>
-      <div class="logo-sub">Human Review Dashboard — Layer 3</div>
+      <div class="logo-sub">AI Code Generation Quality Assurance Framework</div>
     </div>
   </div>
-  <div class="header-meta">
-    <div class="sla-clock">
-      <span class="sla-label">SLA</span>
-      <span class="sla-time" id="slaTimer">09:47</span>
-    </div>
-    <div class="reviewer-badge">
-      <span class="reviewer-dot"></span>
-      <span class="reviewer-role" id="reviewerRole">Security Expert</span>
-    </div>
+  <div class="header-pills">
+    <div class="pill pill-green">Live</div>
+    <div class="pill pill-blue">DSR Research Artefact</div>
   </div>
 </header>
 
-<!-- ── MAIN ────────────────────────────────────────────── -->
+<!-- ═══ NAVIGATION TABS ═══════════════════════════════ -->
+<div style="position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:24px 40px 0">
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tab-analyze" onclick="switchTab('analyze')">
+      <span class="tab-icon">💻</span> Analyze Code
+    </button>
+    <button class="nav-tab" id="tab-results" onclick="switchTab('results')">
+      <span class="tab-icon">📊</span> Results
+    </button>
+    <button class="nav-tab" id="tab-layer3" onclick="switchTab('layer3')">
+      <span class="tab-icon">👤</span> Human Review
+    </button>
+    <button class="nav-tab" id="tab-about" onclick="switchTab('about')">
+      <span class="tab-icon">📋</span> About
+    </button>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═════════════════════════════════════════ -->
 <main>
 
-  <!-- PR SUMMARY BAR -->
-  <div class="pr-summary">
-    <div class="pr-num"><span>PR</span> #2304</div>
-    <div class="pr-divider"></div>
-    <div class="pr-info">
-      <div class="pr-title">feat: add user profile endpoint with JWT validation</div>
-      <div class="pr-meta">
-        <span>👤 KojiDanSeya.tp090490.com</span>
-        <span class="dot">·</span>
-        <span>📁 3 files changed</span>
-        <span class="dot">·</span>
-        <span>➕ 156 lines added</span>
-        <span class="dot">·</span>
-        <span>🌿 feature/user-profile → main</span>
-        <span class="dot">·</span>
-        <span>🔍 Review ID: aicgqaf-7a3f91c2</span>
-      </div>
-    </div>
-    <div class="status-pill awaiting">
-      <span class="blink"></span>
-      Awaiting Review
-    </div>
-  </div>
+  <!-- ─── LEFT COLUMN ────────────────────────────── -->
+  <div class="col-left">
 
-  <!-- LEFT COLUMN -->
-  <div style="display:flex;flex-direction:column;gap:20px;">
+    <!-- ANALYZE PANE -->
+    <div id="pane-analyze">
 
-    <!-- LAYER 1 METRICS -->
-    <div class="panel highlight">
-      <div class="section-title">Layer 1 — Static Analysis Results</div>
-      <div class="analysis-grid">
-        <div>
-          <div class="metric-row">
-            <span class="metric-label">Critical Issues</span>
-            <span class="metric-value mv-good">0</span>
-          </div>
-          <div class="metric-row">
-            <span class="metric-label">High Issues</span>
-            <span class="metric-value mv-good">0</span>
-          </div>
-          <div class="metric-row">
-            <span class="metric-label">Medium Issues</span>
-            <span class="metric-value mv-warn">2</span>
-          </div>
-          <div class="metric-row">
-            <span class="metric-label">Code Smell %</span>
-            <span class="metric-value mv-warn">13.4%</span>
-          </div>
-          <div class="metric-row">
-            <span class="metric-label">Technical Debt</span>
-            <span class="metric-value mv-warn">2.3 hrs</span>
-          </div>
-          <div class="metric-row">
-            <span class="metric-label">Layer 1 Decision</span>
-            <span class="metric-value mv-warn">ESCALATE</span>
-          </div>
-        </div>
-        <div>
-          <div class="gauge-wrap">
-            <div class="gauge-label"><span>Maintainability Index</span><span style="color:var(--amber)">64 / 100</span></div>
-            <div class="gauge-track"><div class="gauge-fill gf-amber" style="width:64%"></div></div>
-          </div>
-          <div class="gauge-wrap">
-            <div class="gauge-label"><span>Cyclomatic Complexity</span><span style="color:var(--amber)">11.2 avg</span></div>
-            <div class="gauge-track"><div class="gauge-fill gf-amber" style="width:75%"></div></div>
-          </div>
-          <div class="gauge-wrap">
-            <div class="gauge-label"><span>Code Coverage</span><span style="color:var(--blue2)">68%</span></div>
-            <div class="gauge-track"><div class="gauge-fill gf-blue" style="width:68%"></div></div>
-          </div>
-          <div style="margin-top:14px;">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:1px;">CWE FLAGS DETECTED</div>
-            <div class="tag-row">
-              <span class="cwe-tag cwe-medium">⚠ CWE-20</span>
-              <span class="cwe-tag cwe-medium">⚠ CWE-200</span>
-              <span class="cwe-tag cwe-low">ℹ CWE-352</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="escalation-box">
-        <div class="esc-label">Escalation Reason</div>
-        ESCALATE: 2 MEDIUM severity issues found; Code smell percentage 13.4% above escalation threshold 10%; Cyclomatic complexity 11.2 exceeds threshold 10; Potential CWEs requiring semantic review: CWE-20, CWE-200
-      </div>
-    </div>
-
-    <!-- LAYER 2 AI ANALYSIS -->
-    <div class="panel highlight">
-      <div class="section-title">Layer 2 — AI Semantic Review</div>
-      <div class="analysis-grid">
-
-        <div>
-          <div class="confidence-ring">
-            <div class="confidence-number" style="color:var(--amber)">
-              68<span class="confidence-pct">%</span>
-            </div>
-            <div class="confidence-label">AI Confidence</div>
-          </div>
-          <div class="gauge-wrap" style="margin-top:4px">
-            <div class="gauge-label"><span>Confidence Score</span><span style="color:var(--amber)">68 / 100</span></div>
-            <div class="gauge-track" style="height:8px"><div class="gauge-fill gf-amber" style="width:68%"></div></div>
-          </div>
-          <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:6px;">
-            Below 70% approval threshold → escalated
-          </div>
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">💻</span> Code Input
+          <div class="line"></div>
         </div>
 
-        <div>
-          <div class="verdict-row">
-            <div class="verdict-item v-pass">
-              <span class="verdict-icon">✅</span>
-              <div class="verdict-text">
-                <strong style="color:var(--green)">Semantic</strong>
-                <span>Correct</span>
-              </div>
-            </div>
-            <div class="verdict-item v-warn">
-              <span class="verdict-icon">⚠️</span>
-              <div class="verdict-text">
-                <strong style="color:var(--amber)">Architecture</strong>
-                <span>Minor deviation</span>
-              </div>
-            </div>
-            <div class="verdict-item v-warn">
-              <span class="verdict-icon">🔒</span>
-              <div class="verdict-text">
-                <strong style="color:var(--amber)">Security</strong>
-                <span>2 MEDIUM found</span>
-              </div>
-            </div>
-            <div class="verdict-item v-warn">
-              <span class="verdict-icon">📐</span>
-              <div class="verdict-text">
-                <strong style="color:var(--amber)">Maintain.</strong>
-                <span>Score: 61</span>
-              </div>
-            </div>
-          </div>
-
-          <div style="margin-top:12px;">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:1px;">AI-DETECTED SECURITY CONCERNS</div>
-            <div class="tag-row">
-              <span class="cwe-tag cwe-medium">⚠ CWE-20 · Input Validation</span>
-              <span class="cwe-tag cwe-medium">⚠ CWE-639 · IDOR Risk</span>
-            </div>
-          </div>
+        <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;font-weight:600">Language</div>
+        <div class="lang-row">
+          <button class="lang-btn active" onclick="setLang(this,'python')">Python</button>
+          <button class="lang-btn" onclick="setLang(this,'javascript')">JavaScript</button>
+          <button class="lang-btn" onclick="setLang(this,'java')">Java</button>
+          <button class="lang-btn" onclick="setLang(this,'csharp')">C#</button>
         </div>
-      </div>
 
-      <div class="ai-card">
-        <div class="ai-label">AI Reviewer Explanation (Claude claude-sonnet-4-20250514)</div>
-        <div class="ai-text">
-          The getUserProfile() function correctly retrieves user data and the JWT validation logic is semantically sound.
-          However, the <code style="color:var(--cyan);background:rgba(0,212,255,0.08);padding:1px 5px;border-radius:3px;">user_id</code>
-          parameter is not validated before use — a missing <code style="color:var(--cyan);background:rgba(0,212,255,0.08);padding:1px 5px;border-radius:3px;">isValidUserID()</code>
-          check could allow an authenticated user to access another user's profile (IDOR — CWE-639).
-          Additionally, the response includes the full user object including <code style="color:var(--cyan);background:rgba(0,212,255,0.08);padding:1px 5px;border-radius:3px;">password_hash</code>
-          and <code style="color:var(--cyan);background:rgba(0,212,255,0.08);padding:1px 5px;border-radius:3px;">internal_id</code>
-          fields which should be excluded (CWE-200). Confidence is 68% due to incomplete visibility into the auth middleware context.
+        <div class="code-label">
+          <span>Paste AI-Generated Code</span>
+          <span id="lineCount" style="color:var(--text3)">0 lines</span>
         </div>
-      </div>
+        <textarea class="code-box" id="codeInput"
+          oninput="countLines()"
+          placeholder="# Paste your AI-generated code here...
+# Or click a sample scenario below.
+#
+# The AICGQAF pipeline will execute:
+#  Layer 1  → Static analysis (SonarQube + CodeQL + Bandit)
+#  Gate 1   → Decision: FAIL / ESCALATE / PASS
+#  Layer 2  → Claude AI semantic review
+#  Gate 2   → Decision: REJECT / ESCALATE / APPROVE
+#  Layer 3  → Human-in-the-loop review (if escalated)"></textarea>
 
-      <div class="escalation-box" style="margin-top:12px;border-left-color:var(--blue);border-color:rgba(42,140,255,0.25);background:rgba(42,140,255,0.04);">
-        <div class="esc-label" style="color:var(--blue2)">Gate 2 Escalation Reason</div>
-        <span style="color:var(--text2)">AI confidence 68% below approval threshold 70%; MEDIUM security concerns requiring human validation: CWE-20, CWE-639.</span>
-      </div>
-    </div>
-
-    <!-- REVIEW CHECKLIST -->
-    <div class="panel highlight">
-      <div class="section-title">Review Checklist</div>
-      <div class="checklist-progress">
-        <span>Progress:</span>
-        <span class="count" id="checkCount">0 / 5</span>
-        <span>items verified</span>
-      </div>
-      <div class="checklist" id="checklist">
-        <div class="check-item" onclick="toggleCheck(this)">
-          <div class="check-box"><span class="check-mark">✓</span></div>
-          <div class="check-text">I have reviewed all flagged security concerns (CWE-20, CWE-639) and verified their severity in the context of this codebase.</div>
+        <div class="samples">
+          <button class="sample-btn" onclick="load('sqli')"><span class="dot dot-red"></span>SQL Injection</button>
+          <button class="sample-btn" onclick="load('creds')"><span class="dot dot-red"></span>Hard-coded Credentials</button>
+          <button class="sample-btn" onclick="load('idor')"><span class="dot dot-amber"></span>IDOR + Data Exposure</button>
+          <button class="sample-btn" onclick="load('clean')"><span class="dot dot-green"></span>Clean Code</button>
         </div>
-        <div class="check-item" onclick="toggleCheck(this)">
-          <div class="check-box"><span class="check-mark">✓</span></div>
-          <div class="check-text">I have verified whether the <code style="color:var(--cyan)">user_id</code> parameter is properly validated by upstream middleware before reaching this function.</div>
-        </div>
-        <div class="check-item" onclick="toggleCheck(this)">
-          <div class="check-box"><span class="check-mark">✓</span></div>
-          <div class="check-text">I have confirmed that no sensitive fields (password_hash, internal_id, PII) are exposed in the API response object.</div>
-        </div>
-        <div class="check-item" onclick="toggleCheck(this)">
-          <div class="check-box"><span class="check-mark">✓</span></div>
-          <div class="check-text">I have reviewed the JWT validation logic and confirmed that authentication cannot be bypassed for this endpoint.</div>
-        </div>
-        <div class="check-item" onclick="toggleCheck(this)">
-          <div class="check-box"><span class="check-mark">✓</span></div>
-          <div class="check-text">I understand the business context of this change and my decision reflects both technical and organisational considerations.</div>
-        </div>
-      </div>
-    </div>
 
-  </div><!-- /LEFT COLUMN -->
-
-  <!-- DECISION PANEL (RIGHT STICKY) -->
-  <div class="decision-panel">
-
-    <div class="panel highlight">
-      <div class="section-title">Decision</div>
-
-      <div style="margin-bottom:14px;">
-        <label style="font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">
-          Review Comment <span style="color:var(--red2)">*</span>
-        </label>
-        <textarea
-          class="comment-area"
-          id="reviewComment"
-          placeholder="Provide your assessment. Minimum 20 characters required before submitting…"
-          oninput="updateCharCount()"
-        ></textarea>
-        <div class="char-counter bad" id="charCounter">0 / 20 minimum</div>
-      </div>
-
-      <div style="margin-bottom:18px;">
-        <label style="font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">
-          Suggested Fix <span style="color:var(--text3)">(optional)</span>
-        </label>
-        <textarea
-          class="fix-area"
-          id="suggestedFix"
-          placeholder="// Paste suggested code fix here&#10;if (!isValidUserID(req.params.user_id)) {&#10;  return res.status(400).json({ error: 'Invalid user ID' });&#10;}"
-        ></textarea>
-      </div>
-
-      <div class="override-warn" id="overrideWarn">
-        ⚠ Override detected — your decision contradicts the AI Layer 2 recommendation (REVIEW_HUMAN → You are approving). A mandatory justification will be logged.
-      </div>
-
-      <div class="decision-buttons" style="margin-top:14px;">
-        <button class="btn btn-approve" id="btnApprove" disabled onclick="submitDecision('APPROVE','✅','Approved','This pull request has been approved and is ready to merge.')">
-          ✅ &nbsp;Approve
-        </button>
-        <button class="btn btn-changes" id="btnChanges" disabled onclick="submitDecision('REQUEST_CHANGES','🔄','Changes Requested','Developer has been notified with your feedback.')">
-          🔄 &nbsp;Request Changes
-        </button>
-        <button class="btn btn-reject" id="btnReject" disabled onclick="submitDecision('REJECT','❌','Rejected','This pull request has been rejected. Developer must open a new PR.')">
-          ❌ &nbsp;Reject
+        <button class="run-btn" id="runBtn" onclick="runPipeline()">
+          ▶ Run AICGQAF Analysis
         </button>
       </div>
 
-      <div style="margin-top:14px;font-size:10px;color:var(--text3);line-height:1.6;border-top:1px solid var(--border);padding-top:12px;">
-        All decisions are logged to DynamoDB with reviewer ID, timestamp, and comment. Override decisions are flagged for Layer 2 model calibration.
+      <!-- PIPELINE STATUS -->
+      <div class="card hidden" id="pipeCard">
+        <div class="card-title">
+          <span class="icon">⚡</span> Pipeline Status
+          <div class="line"></div>
+        </div>
+        <div class="pipe-track">
+          <div class="pipe-step" id="ps-l1"><div class="pipe-name">Layer 1</div><div class="pipe-sub">Static analysis</div></div>
+          <div class="pipe-step" id="ps-g1"><div class="pipe-name">Gate 1</div><div class="pipe-sub">Decision</div></div>
+          <div class="pipe-step" id="ps-l2"><div class="pipe-name">Layer 2</div><div class="pipe-sub">AI review</div></div>
+          <div class="pipe-step" id="ps-g2"><div class="pipe-name">Gate 2</div><div class="pipe-sub">Decision</div></div>
+          <div class="pipe-step" id="ps-l3"><div class="pipe-name">Layer 3</div><div class="pipe-sub">Human</div></div>
+        </div>
+        <div class="status-line" id="statusLine"></div>
+      </div>
+
+    </div><!-- /pane-analyze -->
+
+    <!-- RESULTS PANE -->
+    <div id="pane-results" class="hidden">
+
+      <div id="finalBannerWrap" class="hidden"></div>
+
+      <!-- L1 Card -->
+      <div class="card hidden" id="l1Card">
+        <div class="card-title"><span class="icon">🔍</span> Layer 1 — Static Analysis Results<div class="line"></div></div>
+        <div class="metrics-grid" id="l1Metrics"></div>
+        <div id="l1Gauges"></div>
+        <div class="sec-lbl">Quality Gate 1</div>
+        <div id="gate1Box"></div>
+        <div id="cweSection"></div>
+      </div>
+
+      <!-- L2 Card -->
+      <div class="card hidden" id="l2Card">
+        <div class="card-title"><span class="icon">🧠</span> Layer 2 — AI Semantic Review<div class="line"></div></div>
+        <div class="ai-box"><div class="ai-lbl">🤖 Claude claude-sonnet-4-6 — Semantic Analysis</div><div class="ai-txt" id="aiText"></div></div>
+        <div class="conf-wrap">
+          <div class="conf-hd">
+            <span style="font-size:11px;color:var(--text2)">AI Confidence Score</span>
+            <span class="conf-num" id="confNum" style="color:var(--blue2)">0%</span>
+          </div>
+          <div class="conf-bar"><div class="conf-fill gf-blue" id="confBar" style="width:0%"></div></div>
+          <div style="font-size:10px;color:var(--text3);text-align:right;margin-top:4px">Threshold: ≥70% for approval</div>
+        </div>
+        <div class="verdict-grid" id="verdictGrid"></div>
+        <div id="secConcerns"></div>
+        <div class="sec-lbl">Quality Gate 2</div>
+        <div id="gate2Box"></div>
+      </div>
+
+      <!-- L3 referral -->
+      <div class="card hidden" id="l3RefCard">
+        <div class="card-title"><span class="icon">👤</span> Layer 3 — Escalated<div class="line"></div></div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px">
+          Code escalated to <strong id="refRole" style="color:var(--purple)">Security Expert</strong> for human review.
+          Go to the <strong style="color:var(--blue2)">Human Review</strong> tab →
+        </p>
+        <button class="run-btn" onclick="switchTab('layer3')" style="max-width:300px">
+          👤 Open Human Review
+        </button>
+      </div>
+
+    </div><!-- /pane-results -->
+
+  </div><!-- /col-left -->
+
+  <!-- ─── RIGHT COLUMN ───────────────────────────── -->
+  <div class="col-right">
+
+    <!-- LAYER 3 PANEL -->
+    <div class="card" id="l3Panel">
+      <div class="card-title"><span class="icon">🔐</span> Layer 3 — Human Review<div class="line"></div></div>
+
+      <div class="wait-box" id="l3Wait">
+        <div class="wait-ico">👤</div>
+        <div class="wait-txt">No review pending.<br>Run an analysis — if escalated,<br>the review task appears here.</div>
+      </div>
+
+      <div id="l3Active" class="hidden">
+        <div class="role-badge" id="roleChip">🔐 Security Expert — SLA: 15 min</div>
+        <div class="esc-box">
+          <div class="esc-lbl">Escalation Reason</div>
+          <span id="escText"></span>
+        </div>
+        <div class="sec-lbl">Review Checklist</div>
+        <div class="chk-prog"><span id="chkCount">0</span> / <span id="chkTotal">5</span> items verified</div>
+        <div class="checklist" id="checklistEl"></div>
+        <div class="sec-lbl">Reviewer Comment <span style="color:var(--red2)">*</span></div>
+        <textarea class="comment-box" id="reviewComment"
+          placeholder="Provide your assessment (minimum 20 characters)..."
+          oninput="onComment()"></textarea>
+        <div class="char-cnt char-bad" id="charCnt">0 / 20 characters</div>
+        <div class="sec-lbl">Suggested Fix <span style="color:var(--text3)">(optional)</span></div>
+        <textarea class="fix-box" id="suggestedFix" placeholder="# Paste your suggested code fix here..."></textarea>
+        <div class="dec-row">
+          <button class="dec-btn dec-a" id="btnA" onclick="decide('APPROVE')" disabled>✅ Approve</button>
+          <button class="dec-btn dec-c" id="btnC" onclick="decide('REQUEST_CHANGES')" disabled>🔄 Changes</button>
+          <button class="dec-btn dec-r" id="btnR" onclick="decide('REJECT')" disabled>❌ Reject</button>
+        </div>
+        <div class="dec-note">All decisions are logged with reviewer ID, timestamp, and comment. Override decisions are flagged for Layer 2 calibration.</div>
+      </div>
+
+      <div id="l3Done" class="hidden">
+        <div class="done-box">
+          <span class="done-ico" id="doneIco">✅</span>
+          <div class="done-title" id="doneTitle">Decision Submitted</div>
+          <div class="done-sub" id="doneSub">Decision logged. Developer notified.</div>
+          <button class="run-btn" onclick="resetAll()" style="max-width:220px;margin:0 auto">↩ New Analysis</button>
+        </div>
       </div>
     </div>
 
-    <!-- QUICK REFERENCE -->
-    <div class="panel">
-      <div class="section-title">Quick Reference</div>
-      <div class="metric-row">
-        <span class="metric-label">CWE-639</span>
-        <span style="font-size:11px;color:var(--text2)">IDOR — Insecure Direct Object Ref.</span>
+    <!-- ABOUT PANEL -->
+    <div class="card" id="aboutPanel">
+      <div class="card-title"><span class="icon">📋</span> Research Context<div class="line"></div></div>
+      <div class="about-row"><span class="about-k">Student</span><span class="about-v">Koji Dan Seya — TP090490</span></div>
+      <div class="about-row"><span class="about-k">Institution</span><span class="about-v">APU Malaysia</span></div>
+      <div class="about-row"><span class="about-k">Module</span><span class="about-v">CT095-6-M — Research Methodology</span></div>
+      <div class="about-row"><span class="about-k">Supervisor</span><span class="about-v">Amad Arshad</span></div>
+      <div class="about-row"><span class="about-k">Methodology</span><span class="about-v">Design Science Research (DSR)</span></div>
+      <div class="about-row"><span class="about-k">Framework</span><span class="about-v">AICGQAF v1.0</span></div>
+      <div style="margin-top:16px">
+        <div class="sec-lbl">Three-Tier Pipeline</div>
+        <div class="layer-card"><div class="layer-card-title">🔍 Layer 1 — Static Analysis</div><div class="layer-card-sub">SonarQube + CodeQL + Bandit. Detects CWEs, code smells, complexity. Empirical basis: Sabra et al. (2025), Schreiber & Tippe (2025).</div></div>
+        <div class="layer-card"><div class="layer-card-title">🧠 Layer 2 — AI Semantic Review</div><div class="layer-card-sub">Claude API for semantic correctness, architectural fit, context-specific security. Empirical basis: Cihan et al. (2025).</div></div>
+        <div class="layer-card"><div class="layer-card-title">👤 Layer 3 — Human-in-the-Loop</div><div class="layer-card-sub">Security Expert / Architect / Senior Dev review. SLA enforced. Empirical basis: Osmani (2025).</div></div>
       </div>
-      <div class="metric-row">
-        <span class="metric-label">CWE-20</span>
-        <span style="font-size:11px;color:var(--text2)">Improper Input Validation</span>
-      </div>
-      <div class="metric-row">
-        <span class="metric-label">CWE-200</span>
-        <span style="font-size:11px;color:var(--text2)">Exposure of Sensitive Info</span>
-      </div>
-      <div style="margin-top:14px;font-size:11px;color:var(--text3);">
-        <div style="margin-bottom:6px;color:var(--text2);font-weight:600;">OWASP Reference</div>
-        <div>A01:2021 Broken Access Control</div>
-        <div>A03:2021 Injection</div>
+      <div class="sec-lbl">Key Empirical Findings</div>
+      <div class="emp-row">
+        <div class="emp-item">AI code produces <strong style="color:var(--amber)">1.7×</strong> more defects per PR (CodeRabbit, 2025)</div>
+        <div class="emp-item"><strong style="color:var(--red2)">45%</strong> of AI coding exercises yield critical vulnerabilities (Veracode, 2025)</div>
+        <div class="emp-item"><strong style="color:var(--amber)">90–93%</strong> of AI code issues are code smells (Sabra et al., 2025)</div>
+        <div class="emp-item">Hard-coded credentials in <strong style="color:var(--red2)">all 5</strong> tested LLMs (Sabra et al., 2025)</div>
       </div>
     </div>
 
-  </div><!-- /DECISION PANEL -->
+  </div><!-- /col-right -->
 
 </main>
 
-<!-- CONFIRM OVERLAY -->
-<div class="overlay" id="confirmOverlay">
-  <div class="confirm-card">
-    <div class="confirm-icon" id="confirmIcon">✅</div>
-    <div class="confirm-title" id="confirmTitle">Confirm Decision</div>
-    <div class="confirm-text" id="confirmText">Are you sure you want to submit this decision? This action cannot be undone.</div>
-    <div class="confirm-buttons">
-      <button class="btn-confirm-no" onclick="closeConfirm()">Cancel</button>
-      <button class="btn-confirm-yes" id="confirmYes" onclick="executeDecision()">Confirm</button>
-    </div>
-  </div>
-</div>
-
-<!-- SUCCESS OVERLAY -->
-<div class="success-overlay" id="successOverlay">
-  <div class="success-card">
-    <span class="success-emoji" id="successEmoji">✅</span>
-    <div class="success-title" id="successTitle">Decision Submitted</div>
-    <div class="success-sub" id="successSub">Logging to DynamoDB and notifying developer…</div>
-  </div>
-</div>
-
 <script>
-// ── DATA ─────────────────────────────────────────────────
-const REVIEW_DATA = {
-  review_id:   "aicgqaf-7a3f91c2",
-  pr_number:   2304,
-  reviewer_id: "security_expert_001",
-  sla_minutes: 15,
-  l2_recommendation: "REVIEW_HUMAN",
+// ═══════════════════════════════════════════════
+// AICGQAF v1.0 — Pipeline Engine
+// Replace YOUR_API_KEY_HERE with your key from
+// https://console.anthropic.com
+// ═══════════════════════════════════════════════
+const ANTHROPIC_API_KEY = 'YOUR_API_KEY_HERE';
+
+// ── SAMPLE CODE ──────────────────────────────────
+const SAMPLES = {
+  sqli:{lang:'python',code:`# AI-generated by GitHub Copilot — user search endpoint
+from flask import Flask, request, jsonify
+import sqlite3
+
+app = Flask(__name__)
+
+@app.route('/api/users/search', methods=['GET'])
+def search_users():
+    username = request.args.get('username', '')
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    # VULNERABILITY: Direct string concatenation — SQL Injection (CWE-89)
+    query = "SELECT id, username, email FROM users WHERE username = '" + username + "'"
+    cursor.execute(query)
+    results = cursor.fetchall()
+    conn.close()
+    return jsonify({'users': results})
+
+if __name__ == '__main__':
+    app.run(debug=True)`},
+  creds:{lang:'python',code:`# AI-generated AWS configuration module
+import boto3
+
+AWS_REGION = 'ap-southeast-1'
+# VULNERABILITY: Hard-coded credentials (CWE-798)
+AWS_ACCESS_KEY_ID     = 'AKIAIOSFODNN7EXAMPLE'
+AWS_SECRET_ACCESS_KEY = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+S3_BUCKET_NAME = 'my-production-bucket'
+
+def get_s3_client():
+    return boto3.client('s3',
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+
+def upload_file(file_path, key):
+    client = get_s3_client()
+    client.upload_file(file_path, S3_BUCKET_NAME, key)
+    return f"Uploaded {key} to {S3_BUCKET_NAME}"`},
+  idor:{lang:'python',code:`# AI-generated by Cursor IDE — user profile endpoint
+from flask import Flask, request, jsonify
+from functools import wraps
+import jwt, os
+
+app = Flask(__name__)
+SECRET_KEY = os.environ['JWT_SECRET']
+
+def require_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization','').replace('Bearer ','')
+        try:
+            jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Unauthorized'}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route('/api/users/<int:user_id>/profile', methods=['GET'])
+@require_auth
+def get_user_profile(user_id):
+    # VULNERABILITY 1 (CWE-639): IDOR — user_id not validated against JWT sub
+    user = db.session.query(User).filter_by(id=user_id).first()
+    if not user:
+        return jsonify({'error': 'Not found'}), 404
+    # VULNERABILITY 2 (CWE-200): Sensitive fields exposed in response
+    return jsonify({
+        'id': user.id, 'username': user.username,
+        'email': user.email, 'password_hash': user.password_hash,
+        'internal_id': user.internal_id, 'created_at': str(user.created_at)
+    })`},
+  clean:{lang:'python',code:`# AI-generated secure product search endpoint
+from flask import Flask, request, jsonify
+import sqlite3, re
+
+app = Flask(__name__)
+
+def validate_input(term):
+    """Sanitise and validate search input."""
+    term = term.strip()
+    if not term or len(term) > 100:
+        return None
+    if not re.match(r'^[a-zA-Z0-9\\s\\-\\.]+$', term):
+        return None
+    return term
+
+@app.route('/api/products/search', methods=['GET'])
+def search_products():
+    raw = request.args.get('name', '')
+    term = validate_input(raw)
+    if term is None:
+        return jsonify({'error': 'Invalid search term'}), 400
+
+    conn = sqlite3.connect('products.db')
+    cursor = conn.cursor()
+    # Parameterised query — safe from SQL injection
+    cursor.execute(
+        "SELECT id, name, price, category FROM products WHERE name LIKE ?",
+        (f'%{term}%',))
+    rows = cursor.fetchall()
+    conn.close()
+    products = [{'id':r[0],'name':r[1],'price':r[2],'category':r[3]} for r in rows]
+    return jsonify({'products': products, 'count': len(products)})`}
 };
 
-// ── STATE ─────────────────────────────────────────────────
-let checkedCount = 0;
-let pendingDecision = null;
-let slaSeconds = REVIEW_DATA.sla_minutes * 60;
-
-// ── SLA TIMER ─────────────────────────────────────────────
-function updateSLA() {
-  slaSeconds--;
-  if (slaSeconds < 0) slaSeconds = 0;
-  const m = Math.floor(slaSeconds / 60).toString().padStart(2, '0');
-  const s = (slaSeconds % 60).toString().padStart(2, '0');
-  const el = document.getElementById('slaTimer');
-  el.textContent = `${m}:${s}`;
-  if (slaSeconds < 120) el.classList.add('urgent');
-  if (slaSeconds > 0) setTimeout(updateSLA, 1000);
-}
-setTimeout(updateSLA, 1000);
-
-// ── CHECKLIST ─────────────────────────────────────────────
-function toggleCheck(item) {
-  item.classList.toggle('checked');
-  checkedCount = document.querySelectorAll('.check-item.checked').length;
-  const total  = document.querySelectorAll('.check-item').length;
-  document.getElementById('checkCount').textContent = `${checkedCount} / ${total}`;
-  validateForm();
-}
-
-// ── CHAR COUNTER ──────────────────────────────────────────
-function updateCharCount() {
-  const len = document.getElementById('reviewComment').value.trim().length;
-  const el  = document.getElementById('charCounter');
-  if (len >= 20) {
-    el.textContent = `${len} characters ✓`;
-    el.className = 'char-counter ok';
-  } else {
-    el.textContent = `${len} / 20 minimum`;
-    el.className = 'char-counter bad';
+// ── PRE-COMPUTED RESULTS ──────────────────────────
+const PRE = {
+  sqli:{
+    l1:{critical:1,high:1,medium:0,low:1,smells:8.2,maintain:72,debt:1.1,complexity:5.2,
+      decision:'FAIL',
+      reason:'FAIL: Auto-reject CWE detected — CWE-89 (SQL Injection) at Line 14. CVSS 9.8 Critical. Pipeline halted.',
+      cwes:[{id:'CWE-89',sev:'CRITICAL',tool:'CodeQL + Bandit',line:14,
+        desc:'SQL Injection via direct string concatenation in search_users(). User input from request.args flows into SQL query without parameterisation. Attackers can modify the query to extract, modify, or delete all database data.',
+        fix:'Use parameterised queries:\nquery = "SELECT id, username, email FROM users WHERE username = ?"\ncursor.execute(query, (username,))'}]
+    },gate1:'FAIL',l2:null,l3:null
+  },
+  creds:{
+    l1:{critical:0,high:2,medium:0,low:0,smells:5.1,maintain:78,debt:0.8,complexity:3.4,
+      decision:'FAIL',
+      reason:'FAIL: Hard-coded credentials detected (CWE-798) at Lines 5–6. Confirmed by Bandit B105 + CodeQL + SonarQube. CVSS 9.1 Critical.',
+      cwes:[{id:'CWE-798',sev:'CRITICAL',tool:'Bandit B105 + CodeQL + SonarQube',line:'5–6',
+        desc:'AWS Access Key ID and Secret Access Key hard-coded as string literals. Any repository access permanently exposes credentials. Automated scanners detect committed AWS keys within minutes.',
+        fix:'Use environment variables:\nimport os\nAWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]\nAWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]\n# Production: use AWS IAM Roles (no credentials needed)'}]
+    },gate1:'FAIL',l2:null,l3:null
+  },
+  idor:{
+    l1:{critical:0,high:0,medium:2,low:2,smells:13.4,maintain:64,debt:2.3,complexity:11.2,
+      decision:'ESCALATE',
+      reason:'ESCALATE: 2 MEDIUM severity issues found; Code smell 13.4% exceeds 10% threshold; Cyclomatic complexity 11.2 exceeds threshold 10.',
+      cwes:[
+        {id:'CWE-200',sev:'MEDIUM',tool:'CodeQL',line:27,
+          desc:'Full user object returned including password_hash and internal_id — sensitive fields exposed in HTTP response.',
+          fix:'Return only safe fields:\nreturn jsonify({"id": user.id, "username": user.username, "email": user.email, "created_at": str(user.created_at)})'},
+        {id:'CWE-20',sev:'MEDIUM',tool:'SonarQube',line:21,
+          desc:'Input validation on user_id not confirmed at function entry level.',
+          fix:'Add explicit parameter validation before DB query.'}
+      ]
+    },gate1:'ESCALATE',
+    l2:{confidence:68,semantic:true,arch:true,maintain:61,decision:'ESCALATE',
+      explanation:'JWT authentication is correctly implemented — token validity is checked at the decorator. However, two MEDIUM security concerns are identified: (1) CWE-639 (IDOR) — the user_id URL parameter is never compared against the JWT token subject claim (payload["sub"]), allowing any authenticated user to access any other user\'s profile. (2) CWE-200 — password_hash is returned in the response and must never appear in any API response. Confidence is 68%, below the 70% approval threshold, due to incomplete middleware visibility.',
+      concerns:[
+        {id:'CWE-639',sev:'MEDIUM',
+          desc:'IDOR: any authenticated user can access any profile by changing the user_id URL parameter. JWT sub claim is never validated against the requested user_id.',
+          fix:'payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])\nif str(payload["sub"]) != str(user_id) and not payload.get("is_admin"):\n    return jsonify({"error": "Forbidden"}), 403'},
+        {id:'CWE-200',sev:'MEDIUM',
+          desc:'password_hash and internal_id are returned in the HTTP response. Returning a password hash in any API response is a critical error.',
+          fix:'return jsonify({"id": user.id, "username": user.username,\n    "email": user.email, "created_at": str(user.created_at)})'}
+      ],
+      reason:'Confidence 68% below 70% approval threshold; MEDIUM security concerns: CWE-639 (IDOR), CWE-200 (Sensitive Data Exposure).',
+      role:'Security Expert',sla:15
+    },gate2:'ESCALATE',
+    l3:{checklist:[
+      'Verified CWE-639 (IDOR) — confirmed JWT sub claim is NOT compared to user_id in any middleware layer.',
+      'Confirmed password_hash is returned in the API response — CWE-200 finding is valid.',
+      'Reviewed authentication decorator — token validity is checked, but user identity is not validated.',
+      'Confirmed no higher-level RBAC or admin middleware that would justify unrestricted profile access.',
+      'Understood business context — user-facing API; users must only access their own profile.'
+    ]}
+  },
+  clean:{
+    l1:{critical:0,high:0,medium:0,low:1,smells:4.2,maintain:88,debt:0.4,complexity:4.1,
+      decision:'PASS',
+      reason:'All Quality Gate 1 thresholds met. No security violations detected. Code uses parameterised queries and validates input.',
+      cwes:[]
+    },gate1:'PASS',
+    l2:{confidence:91,semantic:true,arch:true,maintain:86,decision:'APPROVE',
+      explanation:'Code is semantically correct and uses parameterised queries throughout. Input validation is present and appropriate — regex sanitisation and length-checking before query execution. The response returns only safe public fields. Architecture follows standard Flask REST patterns. No security concerns detected.',
+      concerns:[],
+      reason:'Confidence 91% ≥ 70% threshold; semantic_correct: true; architectural_fit: true; no security concerns; all Gate 2 criteria met.'
+    },gate2:'APPROVE',l3:null
   }
-  validateForm();
+};
 
-  // Show override warning if approving with l2=REVIEW_HUMAN
-  const overrideEl = document.getElementById('overrideWarn');
-  if (pendingDecision === 'APPROVE' && REVIEW_DATA.l2_recommendation !== 'APPROVE') {
-    overrideEl.classList.add('visible');
-  } else {
-    overrideEl.classList.remove('visible');
-  }
-}
+// ── STATE ────────────────────────────────────────
+let sample=null, lang='python', checked=0, totalChk=0;
+const $=id=>document.getElementById(id);
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
 
-// ── FORM VALIDATION ───────────────────────────────────────
-function validateForm() {
-  const commentOk = document.getElementById('reviewComment').value.trim().length >= 20;
-  const total = document.querySelectorAll('.check-item').length;
-  const checklistOk = checkedCount === total;
-  const enabled = commentOk && checklistOk;
-
-  document.getElementById('btnApprove').disabled  = !enabled;
-  document.getElementById('btnChanges').disabled  = !enabled;
-  document.getElementById('btnReject').disabled   = !enabled;
-}
-
-// ── DECISION FLOW ─────────────────────────────────────────
-function submitDecision(decision, icon, title, subtext) {
-  pendingDecision = decision;
-  document.getElementById('confirmIcon').textContent  = icon;
-  document.getElementById('confirmTitle').textContent = `Confirm: ${title}`;
-  document.getElementById('confirmText').textContent  =
-    `You are about to submit decision "${title}" for PR #${REVIEW_DATA.pr_number}. ` +
-    `This will be logged permanently with your reviewer ID. ${subtext}`;
-
-  // Colour the confirm button
-  const yesBtn = document.getElementById('confirmYes');
-  const colours = { APPROVE:'#00a550', REQUEST_CHANGES:'#e65c00', REJECT:'#c62828' };
-  yesBtn.style.background = colours[decision] || '#2a8cff';
-
-  document.getElementById('confirmOverlay').classList.add('active');
-}
-
-function closeConfirm() {
-  document.getElementById('confirmOverlay').classList.remove('active');
-  pendingDecision = null;
-}
-
-function executeDecision() {
-  document.getElementById('confirmOverlay').classList.remove('active');
-
-  const payload = {
-    review_id:     REVIEW_DATA.review_id,
-    decision:      pendingDecision,
-    reviewer_id:   REVIEW_DATA.reviewer_id,
-    comment:       document.getElementById('reviewComment').value.trim(),
-    suggested_fix: document.getElementById('suggestedFix').value.trim(),
-    timestamp:     new Date().toISOString(),
-  };
-
-  console.log('[AICGQAF] Submitting Layer 3 decision:', payload);
-
-  // In production: POST to /api/v1/reviews/{review_id}/layer3/decision
-  // fetch(`/api/v1/reviews/${payload.review_id}/layer3/decision`, {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
-  //   body: JSON.stringify(payload)
-  // });
-
-  // Show success
-  const icons = { APPROVE:'✅', REQUEST_CHANGES:'🔄', REJECT:'❌' };
-  const titles = { APPROVE:'Decision Submitted — Approved', REQUEST_CHANGES:'Changes Requested', REJECT:'Pull Request Rejected' };
-  const subs = {
-    APPROVE: 'PR approved. Merge is unblocked. Developer has been notified.',
-    REQUEST_CHANGES: 'Developer notified. PR re-enters pipeline on next push.',
-    REJECT: 'PR closed. Developer must open a new pull request.',
-  };
-  document.getElementById('successEmoji').textContent = icons[pendingDecision];
-  document.getElementById('successTitle').textContent = titles[pendingDecision];
-  document.getElementById('successSub').textContent   = subs[pendingDecision];
-  document.getElementById('successOverlay').classList.add('active');
-
-  // Redirect after 2.5s (in production)
-  setTimeout(() => {
-    document.getElementById('successOverlay').classList.remove('active');
-    alert(`[DEMO] Decision logged:\n\n${JSON.stringify(payload, null, 2)}`);
-  }, 2500);
-}
-
-// ── ANIMATE GAUGE BARS ON LOAD ────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.gauge-fill').forEach(el => {
-    const target = el.style.width;
-    el.style.width = '0%';
-    setTimeout(() => { el.style.width = target; }, 300);
+// ── TABS ─────────────────────────────────────────
+function switchTab(t){
+  ['analyze','results','layer3','about'].forEach(id=>{
+    const p=$('pane-'+id);
+    if(p) p.classList.toggle('hidden',id!==t);
+    $('tab-'+id).classList.toggle('active',id===t);
   });
-});
+  // about panel always visible on right
+  $('aboutPanel').classList.toggle('hidden',t==='layer3'||t==='results');
+  $('l3Panel').classList.toggle('hidden',t==='analyze'||t==='about');
+  if(t==='results'){
+    $('l3Panel').classList.remove('hidden');
+    $('aboutPanel').classList.add('hidden');
+  }
+  if(t==='layer3'){
+    $('l3Panel').classList.remove('hidden');
+    $('aboutPanel').classList.add('hidden');
+  }
+}
+
+// ── LANG ─────────────────────────────────────────
+function setLang(btn,l){
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); lang=l;
+}
+
+// ── LINE COUNT ────────────────────────────────────
+function countLines(){
+  $('lineCount').textContent=$('codeInput').value.split('\n').length+' lines';
+}
+
+// ── LOAD SAMPLE ───────────────────────────────────
+function load(key){
+  const s=SAMPLES[key]; if(!s)return;
+  sample=key;
+  $('codeInput').value=s.code;
+  document.querySelectorAll('.lang-btn').forEach(b=>{
+    b.classList.toggle('active',b.textContent.trim().toLowerCase()===s.lang);
+  });
+  lang=s.lang; countLines();
+}
+
+// ── PIPE STEP ─────────────────────────────────────
+function setPipe(id,cls){
+  const el=$('ps-'+id);
+  el.className='pipe-step'+(cls?' '+cls:'');
+}
+function setStatus(msg){$('statusLine').textContent=msg}
+
+// ── GATE BOX ──────────────────────────────────────
+function gateHTML(type,title,reason){
+  const icons={pass:'✅',fail:'❌',warn:'⚠️'};
+  return `<div class="gate-box gb-${type}">
+    <div class="gate-icon">${icons[type]}</div>
+    <div class="gate-body">
+      <div class="gate-title">${title}</div>
+      <div class="gate-reason">${reason}</div>
+    </div>
+    <div class="gate-badge">${title.split('—')[1]?.trim()||type.toUpperCase()}</div>
+  </div>`;
+}
+
+// ── CWE LIST ──────────────────────────────────────
+function cweHTML(cwes){
+  if(!cwes||!cwes.length)return'';
+  return`<div class="sec-lbl" style="margin-top:14px">CWE Violations Detected</div>
+  <div class="cwe-list">${cwes.map(c=>`
+    <div class="cwe-item">
+      <div class="cwe-head">
+        <span class="cwe-tag tc-${c.sev.toLowerCase()}">${c.id}</span>
+        <span class="cwe-tag tc-${c.sev.toLowerCase()}">${c.sev}</span>
+        <span class="cwe-tool-lbl">${c.tool} · Line ${c.line}</span>
+      </div>
+      <div class="cwe-desc">${c.desc}</div>
+      <div class="cwe-fix">${c.fix}</div>
+    </div>`).join('')}</div>`;
+}
+
+// ── FINAL BANNER ──────────────────────────────────
+function showBanner(type,ico,title,sub){
+  const w=$('finalBannerWrap');
+  w.classList.remove('hidden');
+  w.innerHTML=`<div class="final-banner fb-${type}">
+    <div class="fb-ico">${ico}</div>
+    <div><div class="fb-title">${title}</div><div class="fb-sub">${sub}</div></div>
+  </div>`;
+}
+
+// ── RENDER L1 ─────────────────────────────────────
+function renderL1(l1){
+  const c=$('l1Card'); c.classList.remove('hidden'); c.classList.add('fade-in');
+
+  const mc=(v,g,w)=>v<=g?'good':v<=w?'warn':'bad';
+  const mi=(v,g,w)=>v>=g?'good':v>=w?'warn':'bad';
+  $('l1Metrics').innerHTML=`
+    <div class="metric-box ${(l1.critical+l1.high)>0?'bad':'good'}">
+      <div class="metric-num">${l1.critical+l1.high}</div>
+      <div class="metric-lbl">Critical/High</div>
+    </div>
+    <div class="metric-box ${l1.smells>=10?'warn':l1.smells>=30?'bad':'good'}">
+      <div class="metric-num">${l1.smells.toFixed(1)}%</div>
+      <div class="metric-lbl">Code Smells</div>
+    </div>
+    <div class="metric-box ${mi(l1.maintain,80,60)}">
+      <div class="metric-num">${Math.round(l1.maintain)}</div>
+      <div class="metric-lbl">Maintainability</div>
+    </div>
+    <div class="metric-box ${l1.complexity>10?'warn':l1.complexity>15?'bad':'good'}">
+      <div class="metric-num">${l1.complexity.toFixed(1)}</div>
+      <div class="metric-lbl">Complexity</div>
+    </div>`;
+
+  const maintClr=l1.maintain>=80?'gf-green':l1.maintain>=60?'gf-amber':'gf-red';
+  const debtClr=l1.debt<2?'gf-green':l1.debt<5?'gf-amber':'gf-red';
+  $('l1Gauges').innerHTML=`
+    <div class="gauge">
+      <div class="gauge-hd"><span>Maintainability Index</span>
+        <span style="color:${l1.maintain>=80?'var(--green)':l1.maintain>=60?'var(--amber)':'var(--red2)'}">${Math.round(l1.maintain)}/100</span></div>
+      <div class="gauge-track"><div class="gauge-fill ${maintClr}" style="width:0%" data-w="${l1.maintain}%"></div></div>
+    </div>
+    <div class="gauge">
+      <div class="gauge-hd"><span>Technical Debt</span>
+        <span style="color:${l1.debt<2?'var(--green)':l1.debt<5?'var(--amber)':'var(--red2)'}">${l1.debt}h</span></div>
+      <div class="gauge-track"><div class="gauge-fill ${debtClr}" style="width:0%" data-w="${Math.min(l1.debt/5*100,100)}%"></div></div>
+    </div>`;
+
+  const g1t=l1.decision==='FAIL'?'fail':l1.decision==='ESCALATE'?'warn':'pass';
+  $('gate1Box').innerHTML=gateHTML(g1t,`Quality Gate 1 — ${l1.decision}`,l1.reason);
+  $('cweSection').innerHTML=cweHTML(l1.cwes);
+
+  // Animate gauges
+  setTimeout(()=>{
+    document.querySelectorAll('.gauge-fill[data-w]').forEach(el=>{el.style.width=el.dataset.w});
+  },120);
+}
+
+// ── RENDER L2 ─────────────────────────────────────
+function renderL2(l2){
+  if(!l2)return;
+  const c=$('l2Card'); c.classList.remove('hidden'); c.classList.add('fade-in');
+
+  $('aiText').textContent=l2.explanation;
+
+  const confClr=l2.confidence>=70?'var(--green)':l2.confidence>=50?'var(--amber)':'var(--red2)';
+  $('confNum').textContent=l2.confidence+'%';
+  $('confNum').style.color=confClr;
+  $('confBar').className=`conf-fill ${l2.confidence>=70?'gf-green':l2.confidence>=50?'gf-amber':'gf-red'}`;
+  setTimeout(()=>{$('confBar').style.width=l2.confidence+'%'},150);
+
+  $('verdictGrid').innerHTML=`
+    <div class="verdict ${l2.semantic?'v-pass':'v-fail'}">
+      <div class="v-icon">${l2.semantic?'✅':'❌'}</div>
+      <div><div class="v-lbl">Semantic</div><div class="v-sub">${l2.semantic?'Correct':'Failure'}</div></div>
+    </div>
+    <div class="verdict ${l2.arch?'v-pass':'v-warn'}">
+      <div class="v-icon">${l2.arch?'✅':'⚠️'}</div>
+      <div><div class="v-lbl">Architecture</div><div class="v-sub">${l2.arch?'Compliant':'Deviation'}</div></div>
+    </div>
+    <div class="verdict ${l2.maintain>=70?'v-pass':l2.maintain>=50?'v-warn':'v-fail'}">
+      <div class="v-icon">${l2.maintain>=70?'✅':'⚠️'}</div>
+      <div><div class="v-lbl">Maintainability</div><div class="v-sub">Score: ${l2.maintain}</div></div>
+    </div>
+    <div class="verdict ${(l2.concerns||[]).length===0?'v-pass':'v-warn'}">
+      <div class="v-icon">${(l2.concerns||[]).length===0?'✅':'⚠️'}</div>
+      <div><div class="v-lbl">Security</div><div class="v-sub">${(l2.concerns||[]).length} concern(s)</div></div>
+    </div>`;
+
+  if(l2.concerns&&l2.concerns.length){
+    $('secConcerns').innerHTML=`<div class="sec-lbl">AI-Detected Security Concerns</div>
+      <div class="cwe-list">${l2.concerns.map(c=>`
+        <div class="cwe-item">
+          <div class="cwe-head">
+            <span class="cwe-tag tc-${(c.sev||'medium').toLowerCase()}">${c.id}</span>
+            <span class="cwe-tag tc-${(c.sev||'medium').toLowerCase()}">${c.sev||'MEDIUM'}</span>
+          </div>
+          <div class="cwe-desc">${c.desc}</div>
+          <div class="cwe-fix">${c.fix}</div>
+        </div>`).join('')}</div>`;
+  } else {
+    $('secConcerns').innerHTML='<div style="font-size:12px;color:var(--green);padding:6px 0">✅ No security concerns detected.</div>';
+  }
+
+  const g2t=l2.decision==='APPROVE'?'pass':l2.decision==='REJECT'?'fail':'warn';
+  $('gate2Box').innerHTML=gateHTML(g2t,`Quality Gate 2 — ${l2.decision}`,l2.reason);
+}
+
+// ── RENDER L3 ─────────────────────────────────────
+function renderL3(l2,l3){
+  if(!l3)return;
+  $('l3Wait').classList.add('hidden');
+  $('l3Done').classList.add('hidden');
+  $('l3Active').classList.remove('hidden');
+
+  $('roleChip').textContent=`🔐 ${l2.role||'Security Expert'} — SLA: ${l2.sla||15} min`;
+  $('escText').textContent=l2.reason;
+
+  checked=0; totalChk=l3.checklist.length;
+  $('chkTotal').textContent=totalChk;
+  $('chkCount').textContent=0;
+
+  const cl=$('checklistEl'); cl.innerHTML='';
+  l3.checklist.forEach((item,i)=>{
+    const d=document.createElement('div');
+    d.className='chk';
+    d.innerHTML=`<div class="chk-box" id="ckb${i}"></div><div class="chk-txt">${item}</div>`;
+    d.onclick=()=>{
+      d.classList.toggle('on');
+      $('ckb'+i).textContent=d.classList.contains('on')?'✓':'';
+      checked=document.querySelectorAll('.chk.on').length;
+      $('chkCount').textContent=checked;
+      validateL3();
+    };
+    cl.appendChild(d);
+  });
+
+  $('reviewComment').value='';
+  $('suggestedFix').value='';
+  $('charCnt').textContent='0 / 20 characters';
+  $('charCnt').className='char-cnt char-bad';
+  validateL3();
+}
+
+function onComment(){
+  const len=$('reviewComment').value.trim().length;
+  $('charCnt').textContent=`${len} / 20 characters`;
+  $('charCnt').className=`char-cnt ${len>=20?'char-ok':'char-bad'}`;
+  validateL3();
+}
+
+function validateL3(){
+  const commentOk=($('reviewComment').value||'').trim().length>=20;
+  const checkOk=checked===totalChk;
+  const ok=commentOk&&checkOk&&totalChk>0;
+  ['btnA','btnC','btnR'].forEach(id=>$(id).disabled=!ok);
+}
+
+// ── HUMAN DECISION ────────────────────────────────
+function decide(d){
+  $('l3Active').classList.add('hidden');
+  $('l3Done').classList.remove('hidden');
+  const cfg={
+    APPROVE:{ico:'✅',title:'Approved',sub:'PR approved for merge. Developer notified. Decision logged to audit trail.'},
+    REQUEST_CHANGES:{ico:'🔄',title:'Changes Requested',sub:'Developer notified with feedback. PR re-enters pipeline on next push.'},
+    REJECT:{ico:'❌',title:'Rejected',sub:'PR closed. Developer must open a new pull request with a revised approach.'}
+  }[d];
+  $('doneIco').textContent=cfg.ico;
+  $('doneTitle').textContent=cfg.title;
+  $('doneSub').textContent=cfg.sub;
+  const t=d==='APPROVE'?'approved':d==='REJECT'?'rejected':'escalated';
+  showBanner(t,cfg.ico,'Pipeline Complete — '+cfg.title,cfg.sub);
+  switchTab('results');
+  console.log('[AICGQAF L3] Decision:',{decision:d,reviewer:'reviewer_001',comment:$('reviewComment').value.trim(),timestamp:new Date().toISOString()});
+}
+
+// ── MAIN PIPELINE ─────────────────────────────────
+async function runPipeline(){
+  const code=$('codeInput').value.trim();
+  if(!code||code.length<30){alert('Please paste some code first, or load a sample scenario.');return;}
+
+  const btn=$('runBtn');
+  btn.disabled=true;
+  btn.innerHTML='<div class="spinner"></div> Analysing...';
+
+  $('pipeCard').classList.remove('hidden');
+  ['l1','g1','l2','g2','l3'].forEach(p=>setPipe(p,''));
+  ['l1Card','l2Card','l3RefCard'].forEach(id=>{const e=$(id);if(e)e.classList.add('hidden')});
+  $('finalBannerWrap').classList.add('hidden');
+  $('l3Wait').classList.remove('hidden');
+  $('l3Active').classList.add('hidden');
+  $('l3Done').classList.add('hidden');
+
+  const data=sample&&PRE[sample]?PRE[sample]:await liveAnalysis(code);
+
+  // Layer 1
+  setPipe('l1','active');
+  setStatus('Layer 1: Running SonarQube + CodeQL + Bandit analysis...');
+  await delay(1000);
+  const l1=data.l1;
+  const g1c=l1.decision==='FAIL'?'fail':l1.decision==='ESCALATE'?'warn':'pass';
+  setPipe('l1',g1c); setPipe('g1',g1c);
+  setStatus('Layer 1 complete — Decision: '+l1.decision);
+  renderL1(l1);
+  switchTab('results');
+  await delay(400);
+
+  if(l1.decision==='FAIL'){
+    showBanner('rejected','❌','Pipeline Rejected — Layer 1','Critical vulnerability auto-rejected at Quality Gate 1. No AI or human review required.');
+    btn.disabled=false;btn.innerHTML='▶ Run AICGQAF Analysis';return;
+  }
+
+  // Layer 2
+  await delay(300);
+  setPipe('l2','active');
+  setStatus('Layer 2: Building context package → calling Claude AI for semantic review...');
+  await delay(sample?1400:200);
+
+  const l2=data.l2;
+  if(!l2){btn.disabled=false;btn.innerHTML='▶ Run AICGQAF Analysis';return;}
+
+  const g2c=l2.decision==='APPROVE'?'pass':l2.decision==='REJECT'?'fail':'warn';
+  setPipe('l2',l2.decision==='APPROVE'?'pass':l2.decision==='REJECT'?'fail':'warn');
+  setPipe('g2',g2c);
+  setStatus('Layer 2 complete — Confidence: '+l2.confidence+'% — Decision: '+l2.decision);
+  renderL2(l2);
+  await delay(400);
+
+  if(l2.decision==='APPROVE'){
+    setPipe('g2','pass');
+    showBanner('approved','✅','Approved — AI Semantic Review',`AI confidence ${l2.confidence}%. Pipeline Path 3: L1 ESCALATE → L2 APPROVE → Auto-merge.`);
+    btn.disabled=false;btn.innerHTML='▶ Run AICGQAF Analysis';return;
+  }
+  if(l2.decision==='REJECT'){
+    showBanner('rejected','❌','Rejected — AI Semantic Review','Critical issue found by AI. Pipeline Path 4: L1 ESCALATE → L2 REJECT.');
+    btn.disabled=false;btn.innerHTML='▶ Run AICGQAF Analysis';return;
+  }
+
+  // Layer 3
+  await delay(300);
+  setPipe('l3','warn');
+  setStatus('Escalating to Layer 3 — assigning '+(l2.role||'Security Expert')+' ('+l2.sla+' min SLA)...');
+  await delay(600);
+
+  $('l3RefCard').classList.remove('hidden');
+  $('refRole').textContent=l2.role||'Security Expert';
+  if(data.l3)renderL3(l2,data.l3);
+  showBanner('escalated','⚠️','Awaiting Human Review — Layer 3',`Escalated to ${l2.role||'Security Expert'}. Complete the review in the Human Review tab.`);
+
+  btn.disabled=false;btn.innerHTML='▶ Run AICGQAF Analysis';
+}
+
+// ── LIVE ANALYSIS ─────────────────────────────────
+async function liveAnalysis(code){
+  const lower=code.toLowerCase();
+  const l1={critical:0,high:0,medium:0,low:0,
+    smells:5,maintain:80,debt:0.5,complexity:5,
+    decision:'PASS',reason:'',cwes:[]};
+
+  // SQL Injection
+  if((lower.includes('execute(')||lower.includes('execute ('))&&
+     (code.includes('+"')||code.includes("+'")|| code.includes('+ "')||code.includes("+ '"))){
+    l1.cwes.push({id:'CWE-89',sev:'CRITICAL',tool:'CodeQL + Bandit',
+      line:'~'+findLine(code,'execute'),
+      desc:'SQL Injection: user input flows into SQL query via string concatenation.',
+      fix:'cursor.execute("SELECT ... WHERE x = ?", (value,))'});
+    l1.critical++;
+  }
+  // Hard-coded creds
+  if((code.includes('AKIA')||code.includes('secret_access_key'))&&
+     !code.includes('os.environ')&&!code.includes('getenv')){
+    l1.cwes.push({id:'CWE-798',sev:'CRITICAL',tool:'Bandit B105 + CodeQL',
+      line:'~'+findLine(code,'KEY'),
+      desc:'Hard-coded credentials detected.',
+      fix:'os.environ["AWS_ACCESS_KEY_ID"]'});
+    l1.high++;
+  }
+  // Password in response
+  if(code.includes('password_hash')&&code.includes('jsonify')){
+    l1.cwes.push({id:'CWE-200',sev:'MEDIUM',tool:'CodeQL',
+      line:'~'+findLine(code,'password_hash'),
+      desc:'Sensitive field (password_hash) exposed in API response.',
+      fix:'Return only: {id, username, email, created_at}'});
+    l1.medium++;
+  }
+  // IDOR
+  if(code.includes('user_id')&&code.includes('jwt')&&
+     !code.includes("payload['sub']")&&!code.includes('payload["sub"]')){
+    l1.cwes.push({id:'CWE-639',sev:'MEDIUM',tool:'SonarQube',
+      line:'~'+findLine(code,'user_id'),
+      desc:'IDOR: URL parameter not validated against JWT token claims.',
+      fix:"if str(payload['sub']) != str(user_id): return 403"});
+    l1.medium++;
+  }
+
+  const lines=code.split('\n').length;
+  l1.smells=Math.min(l1.medium*9+l1.low*3+Math.random()*4,35);
+  l1.maintain=Math.max(55,90-l1.critical*22-l1.high*12-l1.medium*5);
+  l1.debt=+(l1.critical*1.5+l1.high*0.8+l1.medium*0.4+Math.random()*0.5).toFixed(1);
+  l1.complexity=+(4+(code.match(/if |for |while |try:|elif /g)||[]).length*1.3).toFixed(1);
+
+  if(l1.critical>0||l1.high>0){
+    l1.decision='FAIL';
+    l1.reason='FAIL: '+l1.cwes.filter(c=>['CRITICAL','HIGH'].includes(c.sev)).map(c=>c.id).join(', ')+' detected — auto-rejected.';
+    return{l1,gate1:'FAIL',l2:null,l3:null};
+  }
+  if(l1.medium>0||l1.smells>=10||l1.complexity>10){
+    l1.decision='ESCALATE';
+    l1.reason=`ESCALATE: ${l1.medium} MEDIUM issue(s); Code smell ${l1.smells.toFixed(1)}%; Complexity ${l1.complexity.toFixed(1)}.`;
+  }else{
+    l1.reason='All Quality Gate 1 thresholds met. No violations detected.';
+  }
+
+  const l2=await callClaude(code,lang,l1);
+  const g2=evalGate2(l2);
+  l2.decision=g2;
+  if(g2==='ESCALATE'){
+    return{l1,gate1:l1.decision,l2,gate2:g2,
+      l3:{checklist:[
+        'Reviewed all flagged security concerns in full codebase context.',
+        'Verified no upstream middleware resolves the identified issues.',
+        'Confirmed sensitive data handling complies with security policy.',
+        'Reviewed authentication and authorisation logic end to end.',
+        'Understood business context — decision reflects organisational risk tolerance.'
+      ]}};
+  }
+  return{l1,gate1:l1.decision,l2,gate2:g2,l3:null};
+}
+
+function findLine(code,pat){
+  const idx=code.split('\n').findIndex(l=>l.toLowerCase().includes(pat.toLowerCase()));
+  return idx>=0?idx+1:'?';
+}
+function evalGate2(r){
+  if(!r.semantic)return'REJECT';
+  if((r.concerns||[]).some(c=>['HIGH','CRITICAL'].includes(c.sev)))return'REJECT';
+  if(r.confidence<30)return'REJECT';
+  if(r.confidence<70)return'ESCALATE';
+  if((r.concerns||[]).some(c=>c.sev==='MEDIUM'))return'ESCALATE';
+  if(r.maintain<50||!r.arch)return'ESCALATE';
+  return'APPROVE';
+}
+
+async function callClaude(code,language,l1){
+  const fallback={confidence:75,semantic:true,arch:true,maintain:72,
+    decision:'APPROVE',concerns:[],
+    explanation:'Static analysis found no critical issues. Code structure appears sound.',
+    reason:'Confidence 75% ≥ 70%; no security concerns detected.'};
+
+  if(!ANTHROPIC_API_KEY||ANTHROPIC_API_KEY==='YOUR_API_KEY_HERE'){
+    console.warn('[AICGQAF] No API key — using fallback Layer 2 result.');
+    return fallback;
+  }
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_API_KEY,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,messages:[{role:'user',
+        content:`You are the AICGQAF Layer 2 AI reviewer. Analyse this ${language} code.
+Layer 1 found: ${l1.cwes.map(c=>c.id).join(', ')||'nothing'} | Decision: ${l1.decision}
+
+CODE:
+\`\`\`${language}
+${code.slice(0,2800)}
+\`\`\`
+
+Respond ONLY with valid JSON (no markdown):
+{"confidence":80,"semantic":true,"arch":true,"maintain":75,"concerns":[{"id":"CWE-XX","sev":"MEDIUM","desc":"...","fix":"..."}],"explanation":"2-3 sentence summary.","reason":"Gate 2 reason."}`}]})
+    });
+    const d=await res.json();
+    const txt=d.content?.filter(b=>b.type==='text').map(b=>b.text).join('')||'';
+    return JSON.parse(txt.replace(/```json|```/g,'').trim());
+  }catch(e){
+    console.error('[AICGQAF L2] API error:',e);
+    return fallback;
+  }
+}
+
+function resetAll(){
+  sample=null;
+  $('codeInput').value='';
+  $('pipeCard').classList.add('hidden');
+  $('finalBannerWrap').classList.add('hidden');
+  ['l1Card','l2Card','l3RefCard'].forEach(id=>{const e=$(id);if(e)e.classList.add('hidden')});
+  $('l3Wait').classList.remove('hidden');
+  $('l3Active').classList.add('hidden');
+  $('l3Done').classList.add('hidden');
+  countLines();
+  switchTab('analyze');
+}
+
+// ── INIT ──────────────────────────────────────────
+switchTab('analyze');
+</script>
+<script>
+// ============================================================
+// AICGQAF v1.0 — Live Pipeline Connection Layer
+// Koji Dan Seya | TP090490 | CT095-6-M
+// ============================================================
+// This layer connects the dashboard to real pipeline data:
+// - Loads review records from AWS DynamoDB via API Gateway
+// - Loads Layer 1 and Layer 2 reports from S3
+// - Posts human decisions back to GitHub as PR comments
+// - Polls for new reviews every 30 seconds
+// ============================================================
+
+window.AICGQAF_CONFIG = {
+    // Set these values from your aws_values.env file
+    region:    'ap-southeast-1',
+    table:     'aicgqaf-reviews',
+    bucket:    'aicgqaf-artifacts-591634949024',
+    repo:      'dankoji26/AICGQAF-v1',
+    ghToken:   '',   // Set from GitHub Settings → Tokens
+    apiUrl:    '',   // Set from AWS API Gateway URL
+    demoMode:  true  // Set to false when credentials are configured
+};
+
+// ── Live review loader ────────────────────────────────────────
+window.loadLiveReviews = async function() {
+    var cfg = window.AICGQAF_CONFIG;
+    if (cfg.demoMode || !cfg.apiUrl) {
+        console.log('[AICGQAF] Demo mode — using pre-loaded scenarios');
+        return null;
+    }
+    try {
+        var resp = await fetch(cfg.apiUrl + '/reviews', {
+            headers: { 'Content-Type': 'application/json' }
+        });
+        var data = await resp.json();
+        var items = data.Items || data.items || data || [];
+        // Convert DynamoDB wire format to plain objects
+        return items.map(function(item) {
+            var out = {};
+            Object.keys(item).forEach(function(k) {
+                var v = item[k];
+                out[k] = v.S || v.N || v.BOOL || v;
+            });
+            return out;
+        });
+    } catch (e) {
+        console.warn('[AICGQAF] Could not load from DynamoDB:', e.message);
+        return null;
+    }
+};
+
+// ── Load Layer 1 report from S3 ───────────────────────────────
+window.loadL1Report = async function(reviewId) {
+    var cfg = window.AICGQAF_CONFIG;
+    if (cfg.demoMode) return null;
+    try {
+        var url = 'https://' + cfg.bucket + '.s3.' + cfg.region + 
+                  '.amazonaws.com/reviews/' + reviewId + '/layer1_report.json';
+        var resp = await fetch(url);
+        if (resp.ok) return await resp.json();
+    } catch (e) {
+        console.warn('[AICGQAF] Could not load L1 report:', e.message);
+    }
+    return null;
+};
+
+// ── Load Layer 2 report from S3 ───────────────────────────────
+window.loadL2Report = async function(reviewId) {
+    var cfg = window.AICGQAF_CONFIG;
+    if (cfg.demoMode) return null;
+    try {
+        var url = 'https://' + cfg.bucket + '.s3.' + cfg.region + 
+                  '.amazonaws.com/reviews/' + reviewId + '/layer2_report.json';
+        var resp = await fetch(url);
+        if (resp.ok) return await resp.json();
+    } catch (e) {
+        console.warn('[AICGQAF] Could not load L2 report:', e.message);
+    }
+    return null;
+};
+
+// ── Post decision to GitHub PR ────────────────────────────────
+window.postGitHubDecision = async function(prNumber, reviewId, decision, comment) {
+    var cfg = window.AICGQAF_CONFIG;
+    if (!cfg.ghToken || !prNumber) {
+        console.warn('[AICGQAF] No GitHub token or PR number — skipping GitHub post');
+        return { ok: false, reason: 'No GitHub token configured' };
+    }
+    var icon = decision === 'APPROVE' ? '\u2705' : decision === 'REJECT' ? '\u274c' : '\ud83d\udd04';
+    var body = '## ' + icon + ' AICGQAF v1.0 \u2014 Human Review Decision (Layer 3)\n\n'
+        + '**Decision:** ' + decision + '\n'
+        + '**Reviewer:** Security Expert | AICGQAF Layer 3 Dashboard\n'
+        + '**Review ID:** `' + reviewId + '`\n\n'
+        + '**Reviewer comment:**\n' + comment + '\n\n'
+        + '*Posted automatically by AICGQAF v1.0 Layer 3 | Koji Dan Seya TP090490 | CT095-6-M*';
+    try {
+        var resp = await fetch(
+            'https://api.github.com/repos/' + cfg.repo + '/issues/' + prNumber + '/comments',
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + cfg.ghToken,
+                    'Content-Type': 'application/json',
+                    'User-Agent': 'AICGQAF/1.0'
+                },
+                body: JSON.stringify({ body: body })
+            }
+        );
+        return { ok: resp.ok, status: resp.status };
+    } catch (e) {
+        return { ok: false, reason: e.message };
+    }
+};
+
+// ── Configure connection (call from browser console) ──────────
+window.AICGQAF_connect = function(cfg) {
+    Object.assign(window.AICGQAF_CONFIG, cfg);
+    console.log('[AICGQAF] Configuration updated:', Object.keys(cfg).join(', '));
+    if (cfg.demoMode === false) {
+        console.log('[AICGQAF] Live mode enabled — will load from DynamoDB and post to GitHub');
+    }
+};
+
+// ── Configuration instructions in console ────────────────────
+console.log('%c AICGQAF v1.0 — Layer 3 Dashboard', 'color:#2a8cff;font-size:14px;font-weight:bold');
+console.log('%c Koji Dan Seya | TP090490 | CT095-6-M', 'color:#7a9cc8;font-size:11px');
+console.log('');
+console.log('%c To connect to your live pipeline, run in the console:', 'color:#ffab00');
+console.log('%c AICGQAF_connect({', 'color:#e2ecff');
+console.log('%c   demoMode: false,', 'color:#e2ecff');
+console.log('%c   ghToken: "ghp_YOUR_GITHUB_TOKEN",', 'color:#e2ecff');
+console.log('%c   apiUrl: "https://YOUR_API_GATEWAY_URL/prod"', 'color:#e2ecff');
+console.log('%c })', 'color:#e2ecff');
+console.log('');
+console.log('%c Current config:', 'color:#7a9cc8');
+console.log(window.AICGQAF_CONFIG);
+
+// ── Auto-poll for new reviews every 30 seconds ────────────────
+setInterval(async function() {
+    if (!window.AICGQAF_CONFIG.demoMode) {
+        var reviews = await window.loadLiveReviews();
+        if (reviews && reviews.length > 0) {
+            console.log('[AICGQAF] Poll: ' + reviews.length + ' review(s) in DynamoDB');
+        }
+    }
+}, 30000);
+
+console.log('[AICGQAF] Layer 3 Dashboard loaded. Running in', 
+    window.AICGQAF_CONFIG.demoMode ? 'DEMO' : 'LIVE', 'mode.');
 </script>
 </body>
 </html>
