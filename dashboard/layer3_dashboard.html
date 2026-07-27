@@ -492,9 +492,70 @@ textarea.code-box::placeholder{color:var(--text3)}
 /* ── RESPONSIVE ──────────────────────────── */
 @media(max-width:1050px){main{grid-template-columns:1fr}}
 @media(max-width:600px){main{padding:20px};.header{padding:0 20px}}
+
+/* ── SETTINGS PANEL ─────────────────────────────── */
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.settings-overlay.open{opacity:1;pointer-events:all}
+.settings-modal{background:#0f1e36;border:1px solid rgba(42,140,255,0.35);border-radius:16px;padding:32px;width:480px;max-width:95vw;transform:translateY(20px);transition:transform .3s}
+.settings-overlay.open .settings-modal{transform:none}
+.settings-modal h2{font-size:18px;font-weight:700;color:#2a8cff;margin-bottom:6px;font-family:var(--sans)}
+.settings-modal p{font-size:12px;color:#7a9cc8;margin-bottom:24px;line-height:1.6}
+.settings-field-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:#3d5a80;margin-bottom:6px;margin-top:14px}
+.settings-inp{width:100%;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(42,140,255,0.25);border-radius:8px;color:#e2ecff;font-family:var(--mono);font-size:12px;outline:none;transition:border .2s}
+.settings-inp:focus{border-color:#2a8cff}
+.settings-inp::placeholder{color:#3d5a80}
+.settings-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.settings-btn-primary{padding:11px;background:rgba(42,140,255,0.15);border:1px solid #2a8cff;border-radius:8px;color:#2a8cff;font-family:var(--mono);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+.settings-btn-primary:hover{background:rgba(42,140,255,0.25)}
+.settings-btn-secondary{padding:11px;background:rgba(255,255,255,0.04);border:1px solid rgba(42,140,255,0.2);border-radius:8px;color:#7a9cc8;font-family:var(--mono);font-size:13px;cursor:pointer;transition:all .15s}
+.settings-btn-secondary:hover{color:#e2ecff;border-color:rgba(42,140,255,0.4)}
+.settings-status{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:12px;display:none}
+.settings-status.ok{background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);color:#00e676;display:block}
+.settings-status.err{background:rgba(255,61,61,0.1);border:1px solid rgba(255,61,61,0.3);color:#ff3d3d;display:block}
+.conn-indicator{display:flex;align-items:center;gap:8px;font-size:11px;color:#7a9cc8;cursor:pointer;padding:6px 12px;border:1px solid rgba(42,140,255,0.2);border-radius:8px;transition:all .15s}
+.conn-indicator:hover{border-color:rgba(42,140,255,0.4);color:#e2ecff}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:#3d5a80;flex-shrink:0}
+.conn-dot.live{background:#00e676;animation:pulse 2s infinite}
+.conn-dot.partial{background:#ffab00;animation:pulse 2s infinite}
+.post-result{margin-top:10px;padding:10px 14px;border-radius:8px;font-size:12px;display:none}
+.post-result.ok{background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);color:#00e676;display:block}
+.post-result.err{background:rgba(255,61,61,0.1);border:1px solid rgba(255,61,61,0.3);color:#ff3d3d;display:block}
+
 </style>
 </head>
 <body>
+
+<!-- SETTINGS MODAL -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettingsOnBg(event)">
+  <div class="settings-modal">
+    <h2>⚙️ Connect to Live Pipeline</h2>
+    <p>Enter your credentials to post real decisions to GitHub PRs. All values are stored locally in your browser session only — never sent to any server.</p>
+
+    <div class="settings-field-lbl">GitHub Personal Access Token <span style="color:#ff3d3d">*</span></div>
+    <input class="settings-inp" id="cfgToken" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+    <div style="font-size:10px;color:#3d5a80;margin-top:5px">Needs <code>repo</code> scope — <a href="https://github.com/settings/tokens/new" target="_blank" style="color:#2a8cff">Create token ↗</a></div>
+
+    <div class="settings-field-lbl">GitHub Repository</div>
+    <input class="settings-inp" id="cfgRepo" value="dankoji26/AICGQAF-v1" placeholder="owner/repo">
+
+    <div class="settings-field-lbl">Pull Request Number (for posting decisions)</div>
+    <input class="settings-inp" id="cfgPR" placeholder="e.g. 3" type="number">
+
+    <div class="settings-field-lbl">Reviewer Name (shown in GitHub comment)</div>
+    <input class="settings-inp" id="cfgReviewer" placeholder="e.g. Amad Arshad — Security Expert" value="Security Expert">
+
+    <div class="settings-status" id="settingsStatus"></div>
+
+    <div class="settings-row">
+      <button class="settings-btn-primary" onclick="applySettings()">✅ Connect</button>
+      <button class="settings-btn-secondary" onclick="testConnection()">🔌 Test token</button>
+    </div>
+    <div style="margin-top:10px">
+      <button class="settings-btn-secondary" style="width:100%" onclick="closeSettings()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- ═══ HEADER ═══════════════════════════════════════ -->
 <header class="header">
@@ -688,6 +749,7 @@ textarea.code-box::placeholder{color:var(--text3)}
           <span class="done-ico" id="doneIco">✅</span>
           <div class="done-title" id="doneTitle">Decision Submitted</div>
           <div class="done-sub" id="doneSub">Decision logged. Developer notified.</div>
+          <div id="postResultMsg" class="post-result"></div>
           <button class="run-btn" onclick="resetAll()" style="max-width:220px;margin:0 auto">↩ New Analysis</button>
         </div>
       </div>
@@ -1146,7 +1208,7 @@ function validateL3(){
 }
 
 // ── HUMAN DECISION ────────────────────────────────
-function decide(d){
+async function decide(d){
   $('l3Active').classList.add('hidden');
   $('l3Done').classList.remove('hidden');
   const cfg={
@@ -1160,7 +1222,17 @@ function decide(d){
   const t=d==='APPROVE'?'approved':d==='REJECT'?'rejected':'escalated';
   showBanner(t,cfg.ico,'Pipeline Complete — '+cfg.title,cfg.sub);
   switchTab('results');
-  console.log('[AICGQAF L3] Decision:',{decision:d,reviewer:'reviewer_001',comment:$('reviewComment').value.trim(),timestamp:new Date().toISOString()});
+  const comment=$('reviewComment').value.trim();
+  console.log('[AICGQAF L3] Decision:',{decision:d,reviewer:CONN.reviewer,comment,timestamp:new Date().toISOString()});
+  // Post to GitHub if connected
+  if(CONN.token && CONN.pr){
+    const result = await postDecisionToGitHub(d, comment);
+    const el = document.getElementById('postResultMsg');
+    if(el){
+      el.textContent = result.ok ? '✅ Decision posted to GitHub PR #'+CONN.pr+' successfully.' : '⚠️ Could not post to GitHub: '+result.reason;
+      el.className = 'post-result ' + (result.ok ? 'ok' : 'err');
+    }
+  }
 }
 
 // ── MAIN PIPELINE ─────────────────────────────────
@@ -1531,5 +1603,159 @@ setInterval(async function() {
 console.log('[AICGQAF] Layer 3 Dashboard loaded. Running in', 
     window.AICGQAF_CONFIG.demoMode ? 'DEMO' : 'LIVE', 'mode.');
 </script>
+
+<script>
+// ── AICGQAF Connection Settings ──────────────────────────────
+var CONN = {
+  token: '',
+  repo: 'dankoji26/AICGQAF-v1',
+  pr: '',
+  reviewer: 'Security Expert'
+};
+
+function openSettings(){
+  document.getElementById('settingsOverlay').classList.add('open');
+  // Pre-fill from saved values
+  document.getElementById('cfgToken').value = CONN.token;
+  document.getElementById('cfgRepo').value = CONN.repo;
+  document.getElementById('cfgPR').value = CONN.pr;
+  document.getElementById('cfgReviewer').value = CONN.reviewer;
+  document.getElementById('settingsStatus').className = 'settings-status';
+  document.getElementById('settingsStatus').textContent = '';
+}
+
+function closeSettings(){
+  document.getElementById('settingsOverlay').classList.remove('open');
+}
+
+function closeSettingsOnBg(e){
+  if(e.target.id === 'settingsOverlay') closeSettings();
+}
+
+function updateConnIndicator(){
+  const dot = document.getElementById('connDot');
+  const lbl = document.getElementById('connLabel');
+  if(!dot || !lbl) return;
+  if(CONN.token && CONN.pr){
+    dot.className = 'conn-dot live';
+    lbl.textContent = 'Live — PR #'+CONN.pr+' connected';
+  } else if(CONN.token){
+    dot.className = 'conn-dot partial';
+    lbl.textContent = 'Token set — enter PR number';
+  } else {
+    dot.className = 'conn-dot';
+    lbl.textContent = 'Demo mode — click to connect';
+  }
+}
+
+async function testConnection(){
+  const token = document.getElementById('cfgToken').value.trim();
+  const st = document.getElementById('settingsStatus');
+  if(!token){ st.textContent = '⚠️ Please enter a GitHub token first.'; st.className='settings-status err'; return; }
+  st.textContent = '🔌 Testing token...'; st.className='settings-status ok';
+  try{
+    const r = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': 'Bearer '+token, 'User-Agent': 'AICGQAF/1.0' }
+    });
+    const data = await r.json();
+    if(r.ok){
+      st.textContent = '✅ Token valid — logged in as @'+data.login;
+      st.className = 'settings-status ok';
+    } else {
+      st.textContent = '❌ Token invalid: '+data.message;
+      st.className = 'settings-status err';
+    }
+  } catch(e){
+    st.textContent = '❌ Network error: '+e.message;
+    st.className = 'settings-status err';
+  }
+}
+
+async function applySettings(){
+  const token = document.getElementById('cfgToken').value.trim();
+  const repo = document.getElementById('cfgRepo').value.trim();
+  const pr = document.getElementById('cfgPR').value.trim();
+  const reviewer = document.getElementById('cfgReviewer').value.trim() || 'Security Expert';
+  const st = document.getElementById('settingsStatus');
+
+  if(!token){ st.textContent = '⚠️ GitHub token is required.'; st.className='settings-status err'; return; }
+
+  st.textContent = '🔌 Verifying token...'; st.className='settings-status ok';
+
+  try{
+    const r = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': 'Bearer '+token, 'User-Agent': 'AICGQAF/1.0' }
+    });
+    const data = await r.json();
+    if(!r.ok){ st.textContent='❌ Token invalid: '+data.message; st.className='settings-status err'; return; }
+
+    // Save to CONN
+    CONN.token = token;
+    CONN.repo = repo || 'dankoji26/AICGQAF-v1';
+    CONN.pr = pr;
+    CONN.reviewer = reviewer;
+
+    st.textContent = '✅ Connected as @'+data.login+(pr?' — will post to PR #'+pr:'');
+    st.className = 'settings-status ok';
+    updateConnIndicator();
+
+    setTimeout(closeSettings, 1800);
+
+  } catch(e){
+    st.textContent = '❌ Network error: '+e.message;
+    st.className = 'settings-status err';
+  }
+}
+
+async function postDecisionToGitHub(decision, comment){
+  if(!CONN.token || !CONN.pr) return { ok: false, reason: 'No token or PR number configured' };
+
+  const icon = decision==='APPROVE'?'✅':decision==='REJECT'?'❌':'🔄';
+  const prNum = CONN.pr;
+
+  const body = '## '+icon+' AICGQAF v1.0 — Human Review Decision (Layer 3)\n\n'
+    +'**Decision:** '+decision+'\n'
+    +'**Reviewer:** '+CONN.reviewer+'\n'
+    +'**Repository:** `'+CONN.repo+'`\n\n'
+    +'**Reviewer comment:**\n> '+comment+'\n\n'
+    +'| Metric | Value |\n|---|---|\n'
+    +'| Layer 2 AI Confidence | Based on current analysis |\n'
+    +'| Review completed | '+new Date().toISOString()+' |\n\n'
+    +'*Posted automatically by AICGQAF v1.0 Layer 3 Dashboard | Koji Dan Seya TP090490 | CT095-6-M*';
+
+  try {
+    const r = await fetch(
+      'https://api.github.com/repos/'+CONN.repo+'/issues/'+prNum+'/comments',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer '+CONN.token,
+          'Content-Type': 'application/json',
+          'User-Agent': 'AICGQAF/1.0'
+        },
+        body: JSON.stringify({ body })
+      }
+    );
+    if(r.ok) return { ok: true };
+    const err = await r.json();
+    return { ok: false, reason: err.message || 'HTTP '+r.status };
+  } catch(e){
+    return { ok: false, reason: e.message };
+  }
+}
+
+// Also allow console-based configuration
+window.AICGQAF_connect = function(cfg){
+  Object.assign(CONN, cfg);
+  updateConnIndicator();
+  console.log('[AICGQAF] Connected:', { repo: CONN.repo, pr: CONN.pr, reviewer: CONN.reviewer });
+};
+
+// Init
+updateConnIndicator();
+console.log('%c AICGQAF v1.0 — Layer 3 Dashboard', 'color:#2a8cff;font-size:14px;font-weight:bold');
+console.log('%c Click the connection indicator in the header to configure GitHub posting', 'color:#ffab00');
+</script>
+
 </body>
 </html>
