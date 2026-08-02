@@ -997,6 +997,20 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
 
 // ── TABS ─────────────────────────────────────────
 function switchTab(t){
+  // Handle reviews pane separately
+  const rp = document.getElementById('pane-reviews');
+  const rt = document.getElementById('tab-reviews');
+  if(rp) rp.style.display = t === 'reviews' ? 'block' : 'none';
+  if(rt) rt.classList.toggle('active', t === 'reviews');
+  if(t === 'reviews'){
+    ['analyze','results','layer3','about'].forEach(id=>{
+      const p=$('pane-'+id); if(p) p.classList.add('hidden');
+      const tb=$('tab-'+id); if(tb) tb.classList.remove('active');
+    });
+    const ap=$('aboutPanel'); if(ap) ap.classList.add('hidden');
+    const lp=$('l3Panel'); if(lp) lp.classList.add('hidden');
+    return;
+  }
   ['analyze','results','layer3','about'].forEach(id=>{
     const p=$('pane-'+id);
     if(p) p.classList.toggle('hidden',id!==t);
