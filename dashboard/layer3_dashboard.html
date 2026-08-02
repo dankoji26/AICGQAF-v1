@@ -544,6 +544,9 @@ textarea.code-box::placeholder{color:var(--text3)}
     <div class="settings-field-lbl">Reviewer Name (shown in GitHub comment)</div>
     <input class="settings-inp" id="cfgReviewer" placeholder="e.g. Amad Arshad — Security Expert" value="Security Expert">
 
+    <div class="settings-field-lbl">API Gateway URL <span style="color:#3d5a80">(optional — loads real pipeline reviews)</span></div>
+    <input class="settings-inp" id="cfgApiUrl" placeholder="https://vbsf87h2gd.execute-api.ap-southeast-1.amazonaws.com/prod" value="https://vbsf87h2gd.execute-api.ap-southeast-1.amazonaws.com/prod">
+
     <div class="settings-status" id="settingsStatus"></div>
 
     <div class="settings-row">
@@ -590,6 +593,9 @@ textarea.code-box::placeholder{color:var(--text3)}
     </button>
     <button class="nav-tab" id="tab-about" onclick="switchTab('about')">
       <span class="tab-icon">📋</span> About
+    </button>
+    <button class="nav-tab" id="tab-reviews" onclick="switchTab('reviews');loadLiveReviews()">
+      <span class="tab-icon">📊</span> Live Reviews
     </button>
   </div>
 </div>
@@ -784,6 +790,20 @@ textarea.code-box::placeholder{color:var(--text3)}
     </div>
 
   </div><!-- /col-right -->
+
+
+<!-- ═══ LIVE REVIEWS PANEL ═══════════════════════════ -->
+<div id="pane-reviews" class="tab-pane" style="display:none;padding:32px 40px;max-width:1280px;margin:0 auto">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <div>
+      <div style="font-size:20px;font-weight:700;font-family:var(--sans)">Live Pipeline Reviews</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">Real review records from AWS DynamoDB via API Gateway</div>
+    </div>
+    <button onclick="loadLiveReviews()" style="padding:8px 16px;background:rgba(42,140,255,0.1);border:1px solid rgba(42,140,255,0.3);border-radius:8px;color:var(--blue);font-family:var(--mono);font-size:12px;cursor:pointer">🔄 Refresh</button>
+  </div>
+  <div id="reviewsStatus" style="font-size:12px;color:var(--text3);margin-bottom:16px">Loading...</div>
+  <div id="reviewsList"></div>
+</div>
 
 </main>
 
@@ -1614,7 +1634,8 @@ var CONN = {
   token: '',
   repo: 'dankoji26/AICGQAF-v1',
   pr: '',
-  reviewer: 'Security Expert'
+  reviewer: 'Security Expert',
+  apiUrl: 'https://vbsf87h2gd.execute-api.ap-southeast-1.amazonaws.com/prod'
 };
 
 function openSettings(){
@@ -1698,8 +1719,9 @@ async function applySettings(){
     CONN.repo = repo || 'dankoji26/AICGQAF-v1';
     CONN.pr = pr;
     CONN.reviewer = reviewer;
+    CONN.apiUrl = (document.getElementById('cfgApiUrl').value||'').trim().replace(/\/+$/,'');
 
-    st.textContent = '✅ Connected as @'+data.login+(pr?' — will post to PR #'+pr:'');
+    st.textContent = '✅ Connected as @'+data.login+(pr?' — will post to PR #'+pr:'')+(CONN.apiUrl?' — API connected':'');
     st.className = 'settings-status ok';
     updateConnIndicator();
 
@@ -1759,6 +1781,78 @@ window.AICGQAF_connect = function(cfg){
 updateConnIndicator();
 console.log('%c AICGQAF v1.0 — Layer 3 Dashboard', 'color:#2a8cff;font-size:14px;font-weight:bold');
 console.log('%c Click the connection indicator in the header to configure GitHub posting', 'color:#ffab00');
+
+async function loadLiveReviews(){
+  const status = document.getElementById('reviewsStatus');
+  const list = document.getElementById('reviewsList');
+  if(!status || !list) return;
+
+  const apiUrl = CONN.apiUrl;
+  if(!apiUrl){
+    status.textContent = '⚠️ No API URL configured. Click the connection indicator and enter your API Gateway URL.';
+    list.innerHTML = '';
+    return;
+  }
+
+  status.textContent = '⏳ Loading reviews from ' + apiUrl + '...';
+  list.innerHTML = '';
+
+  try {
+    const r = await fetch(apiUrl + '/reviews');
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    const items = data.items || data.Items || [];
+
+    status.textContent = '✅ ' + items.length + ' review records loaded from DynamoDB — ' + new Date().toLocaleTimeString();
+
+    if(items.length === 0){
+      list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px">No reviews found in DynamoDB table.</div>';
+      return;
+    }
+
+    const statusColors = {
+      'GATE2_REJECT': 'var(--red)',
+      'GATE2_ESCALATE': 'var(--amber)',
+      'LAYER1_FAIL': 'var(--red)',
+      'APPROVED': 'var(--green)',
+    };
+
+    list.innerHTML = items.map(item => {
+      const conf = item.layer2_confidence ? parseInt(item.layer2_confidence) : null;
+      const confColor = conf >= 70 ? 'var(--green)' : conf >= 50 ? 'var(--amber)' : 'var(--red)';
+      const statusColor = statusColors[item.status] || 'var(--text2)';
+      const l1 = item.layer1_decision || '—';
+      const g2 = item.gate2_decision || '—';
+      const prNum = item.review_id ? item.review_id.split('-').pop() : '—';
+      const time = (item.completed_at || item.layer1_completed_at || '').replace('T',' ').substring(0,19);
+
+      return \`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;display:grid;grid-template-columns:120px 1fr auto;gap:16px;align-items:center">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:3px">REVIEW ID</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--blue)">\${item.review_id}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px">PR #\${prNum}</div>
+        </div>
+        <div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+            <span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(42,140,255,0.1);color:var(--blue);border:1px solid rgba(42,140,255,0.3)">L1: \${l1}</span>
+            \${conf !== null ? \`<span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:\${confColor};border:1px solid \${confColor}40">Confidence: \${conf}%</span>\` : ''}
+            <span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;color:\${statusColor};border:1px solid \${statusColor}40">\${item.status || '—'}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text2)">\${item.gate2_reason || item.escalation_reason || '—'}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px">\${time} UTC</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:18px">\${item.final_status === 'REJECTED' ? '❌' : item.status === 'GATE2_ESCALATE' ? '⚠️' : '✅'}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px">\${item.final_status || item.status || '—'}</div>
+        </div>
+      </div>\`;
+    }).join('');
+
+  } catch(e) {
+    status.textContent = '❌ Failed to load: ' + e.message + ' — check API URL in settings';
+    list.innerHTML = '';
+  }
+}
 </script>
 
 </body>
