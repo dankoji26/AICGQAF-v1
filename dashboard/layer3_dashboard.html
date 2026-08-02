@@ -1510,35 +1510,15 @@ window.AICGQAF_CONFIG = {
     bucket:    'aicgqaf-artifacts-591634949024',
     repo:      'dankoji26/AICGQAF-v1',
     ghToken:   '',   // Set from GitHub Settings → Tokens
-    apiUrl:    '',   // Set from AWS API Gateway URL
-    demoMode:  true  // Set to false when credentials are configured
+    apiUrl:    'https://vbsf87h2gd.execute-api.ap-southeast-1.amazonaws.com/prod',
+    demoMode:  false  // Connected to live API
 };
 
 // ── Live review loader ────────────────────────────────────────
 window.loadLiveReviews = async function() {
-    var cfg = window.AICGQAF_CONFIG;
-    if (cfg.demoMode || !cfg.apiUrl) {
-        console.log('[AICGQAF] Demo mode — using pre-loaded scenarios');
-        return null;
-    }
-    try {
-        var resp = await fetch(cfg.apiUrl + '/reviews', {
-            headers: { 'Content-Type': 'application/json' }
-        });
-        var data = await resp.json();
-        var items = data.Items || data.items || data || [];
-        // Convert DynamoDB wire format to plain objects
-        return items.map(function(item) {
-            var out = {};
-            Object.keys(item).forEach(function(k) {
-                var v = item[k];
-                out[k] = v.S || v.N || v.BOOL || v;
-            });
-            return out;
-        });
-    } catch (e) {
-        console.warn('[AICGQAF] Could not load from DynamoDB:', e.message);
-        return null;
+    // Redirect to the new loadLiveReviews defined below
+    if (typeof loadLiveReviews === 'function') {
+        return loadLiveReviews();
     }
 };
 
