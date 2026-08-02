@@ -1515,12 +1515,7 @@ window.AICGQAF_CONFIG = {
 };
 
 // ── Live review loader ────────────────────────────────────────
-window.loadLiveReviews = async function() {
-    // Redirect to the new loadLiveReviews defined below
-    if (typeof loadLiveReviews === 'function') {
-        return loadLiveReviews();
-    }
-};
+window.loadLiveReviews = null; // replaced below
 
 // ── Load Layer 1 report from S3 ───────────────────────────────
 window.loadL1Report = async function(reviewId) {
@@ -1777,76 +1772,63 @@ console.log('%c AICGQAF v1.0 — Layer 3 Dashboard', 'color:#2a8cff;font-size:14
 console.log('%c Click the connection indicator in the header to configure GitHub posting', 'color:#ffab00');
 
 async function loadLiveReviews(){
-  const status = document.getElementById('reviewsStatus');
-  const list = document.getElementById('reviewsList');
-  if(!status || !list) return;
+  var statusEl = document.getElementById('reviewsStatus');
+  var listEl = document.getElementById('reviewsList');
+  if(!statusEl || !listEl) return;
 
-  const apiUrl = CONN.apiUrl;
-  if(!apiUrl){
-    status.textContent = '⚠️ No API URL configured. Click the connection indicator and enter your API Gateway URL.';
-    list.innerHTML = '';
-    return;
-  }
-
-  status.textContent = '⏳ Loading reviews from ' + apiUrl + '...';
-  list.innerHTML = '';
+  var apiUrl = CONN.apiUrl || 'https://vbsf87h2gd.execute-api.ap-southeast-1.amazonaws.com/prod';
+  statusEl.textContent = 'Loading reviews from DynamoDB...';
+  listEl.innerHTML = '';
 
   try {
-    const r = await fetch(apiUrl + '/reviews');
+    var r = await fetch(apiUrl + '/reviews');
     if(!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-    const items = data.items || data.Items || [];
+    var data = await r.json();
+    var items = data.items || data.Items || [];
 
-    status.textContent = '✅ ' + items.length + ' review records loaded from DynamoDB — ' + new Date().toLocaleTimeString();
+    statusEl.textContent = '✅ ' + items.length + ' records loaded — ' + new Date().toLocaleTimeString();
 
     if(items.length === 0){
-      list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px">No reviews found in DynamoDB table.</div>';
+      listEl.innerHTML = '<div style="color:#3d5a80;padding:20px">No reviews found.</div>';
       return;
     }
 
-    const statusColors = {
-      'GATE2_REJECT': 'var(--red)',
-      'GATE2_ESCALATE': 'var(--amber)',
-      'LAYER1_FAIL': 'var(--red)',
-      'APPROVED': 'var(--green)',
-    };
-
-    list.innerHTML = items.map(item => {
-      const conf = item.layer2_confidence ? parseInt(item.layer2_confidence) : null;
-      const confColor = conf >= 70 ? 'var(--green)' : conf >= 50 ? 'var(--amber)' : 'var(--red)';
-      const statusColor = statusColors[item.status] || 'var(--text2)';
-      const l1 = item.layer1_decision || '—';
-      const g2 = item.gate2_decision || '—';
-      const prNum = item.review_id ? item.review_id.split('-').pop() : '—';
-      const time = (item.completed_at || item.layer1_completed_at || '').replace('T',' ').substring(0,19);
-
-      return \`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;display:grid;grid-template-columns:120px 1fr auto;gap:16px;align-items:center">
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:3px">REVIEW ID</div>
-          <div style="font-family:var(--mono);font-size:11px;color:var(--blue)">\${item.review_id}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:4px">PR #\${prNum}</div>
-        </div>
-        <div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-            <span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(42,140,255,0.1);color:var(--blue);border:1px solid rgba(42,140,255,0.3)">L1: \${l1}</span>
-            \${conf !== null ? \`<span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:\${confColor};border:1px solid \${confColor}40">Confidence: \${conf}%</span>\` : ''}
-            <span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;color:\${statusColor};border:1px solid \${statusColor}40">\${item.status || '—'}</span>
-          </div>
-          <div style="font-size:11px;color:var(--text2)">\${item.gate2_reason || item.escalation_reason || '—'}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:4px">\${time} UTC</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:18px">\${item.final_status === 'REJECTED' ? '❌' : item.status === 'GATE2_ESCALATE' ? '⚠️' : '✅'}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:4px">\${item.final_status || item.status || '—'}</div>
-        </div>
-      </div>\`;
-    }).join('');
+    var rows = '';
+    for(var i=0;i<items.length;i++){
+      var it = items[i];
+      var conf = it.layer2_confidence ? parseInt(it.layer2_confidence) : null;
+      var cc = conf>=70?'#00e676':conf>=50?'#ffab00':'#ff3d3d';
+      var rid = it.review_id||'—';
+      var prn = rid.split('-').pop();
+      var tm = (it.completed_at||it.layer1_completed_at||'').replace('T',' ').substring(0,19);
+      var rsn = (it.gate2_reason||it.escalation_reason||'—').substring(0,90);
+      var ico = it.final_status==='REJECTED'?'❌':it.status==='GATE2_ESCALATE'?'⚠️':'✅';
+      var cb = conf!==null?('<span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;color:'+cc+';border:1px solid '+cc+'40">L2: '+conf+'%</span>'):'';
+      rows += '<div style="background:#0f1e36;border:1px solid rgba(42,140,255,0.15);border-radius:10px;padding:14px;margin-bottom:8px;display:flex;gap:14px;align-items:center">'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">'
+        +'<span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(42,140,255,0.1);color:#2a8cff;border:1px solid rgba(42,140,255,0.3)">L1: '+(it.layer1_decision||'—')+'</span>'
+        +cb
+        +'<span style="padding:2px 8px;border-radius:4px;font-size:10px;color:#7a9cc8;border:1px solid rgba(42,140,255,0.15)">'+(it.status||'—')+'</span>'
+        +'</div>'
+        +'<div style="font-family:monospace;font-size:11px;color:#2a8cff;margin-bottom:2px">'+rid+'</div>'
+        +'<div style="font-size:11px;color:#7a9cc8;margin-bottom:2px">'+rsn+'</div>'
+        +'<div style="font-size:10px;color:#3d5a80">'+tm+' UTC | PR #'+prn+'</div>'
+        +'</div>'
+        +'<div style="text-align:center;min-width:36px">'
+        +'<div style="font-size:20px">'+ico+'</div>'
+        +'<div style="font-size:9px;color:#3d5a80;margin-top:2px">'+(it.final_status||it.status||'—')+'</div>'
+        +'</div></div>';
+    }
+    listEl.innerHTML = rows;
 
   } catch(e) {
-    status.textContent = '❌ Failed to load: ' + e.message + ' — check API URL in settings';
-    list.innerHTML = '';
+    statusEl.textContent = 'Failed: ' + e.message;
+    listEl.innerHTML = '<div style="color:#ff3d3d;font-size:12px;padding:10px">Error: '+e.message+'</div>';
+    console.error('[loadLiveReviews]', e);
   }
 }
+
 </script>
 
 </body>
